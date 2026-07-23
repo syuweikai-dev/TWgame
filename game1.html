@@ -20,8 +20,7 @@ body{
     justify-content:center;
     align-items:center;
     font-family:"Arial",sans-serif;
-    transition:.3s;
-    background:#F8F8F8;
+    background:#F0F2F5;
     padding: 20px 0;
 }
 
@@ -31,7 +30,7 @@ body{
     flex-wrap: wrap;
     justify-content: center;
     gap: 20px;
-    max-width: 900px;
+    max-width: 950px;
     padding: 0 15px;
 }
 
@@ -39,17 +38,45 @@ body{
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: rgba(255, 255, 255, 0.6);
+    background: #FFFFFF;
     padding: 15px;
     border-radius: 20px;
-    box-shadow: 0 3px 10px rgba(0,0,0,.08);
+    box-shadow: 0 4px 12px rgba(0,0,0,.08);
+    transition: background 0.3s;
+}
+
+.player-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 8px;
+    padding: 0 5px;
 }
 
 .player-title {
     font-size: 18px;
     font-weight: bold;
-    margin-bottom: 8px;
-    color: #444;
+    color: #333;
+}
+
+/* 玩家專屬的小顏色選擇器 */
+.player-color-picker {
+    display: flex;
+    gap: 5px;
+}
+
+.mini-color-btn {
+    width: 22px;
+    height: 22px;
+    border: 2px solid rgba(0,0,0,0.1);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.mini-color-btn:active {
+    transform: scale(0.9);
 }
 
 .score-container{
@@ -88,12 +115,8 @@ body{
     font-size: 50px;
 }
 .single-mode .player-card {
-    background: transparent;
-    box-shadow: none;
-    padding: 0;
-}
-.single-mode .player-title {
-    display: none;
+    width: 100%;
+    max-width: 450px;
 }
 
 .controls{
@@ -127,27 +150,13 @@ body{
     outline: none;
 }
 
-.color-container {
-    margin-top: 15px;
-    display: flex;
-    gap: 10px;
-}
-
-.color-btn{
-    width:40px;
-    height:40px;
-    border:none;
-    border-radius:50%;
-    cursor:pointer;
-    box-shadow:0 2px 6px rgba(0,0,0,.2);
-}
-
-.red{background:#E8B4B8;}
-.blue{background:#B8D4F0;}
-.green{background:#BFDCC2;}
-.yellow{background:#F4E6B5;}
-.gray{background:#D5D5D5;}
-.white{background:#F8F8F8;}
+/* 6種色彩定義 */
+.c-red{background:#E8B4B8;}
+.c-blue{background:#B8D4F0;}
+.c-green{background:#BFDCC2;}
+.c-yellow{background:#F4E6B5;}
+.c-gray{background:#D5D5D5;}
+.c-white{background:#FFFFFF;}
 
 @media(max-width:600px){
     .single-mode .score{
@@ -165,9 +174,7 @@ body{
 <body>
 
 <!-- 動態產生成員版面 -->
-<div id="appContainer" class="players-wrapper single-mode">
-    <!-- 這裡會透過 JavaScript 自動填入 -->
-</div>
+<div id="appContainer" class="players-wrapper single-mode"></div>
 
 <!-- 控制按鈕區 (重置與人數下拉選單) -->
 <div class="controls">
@@ -183,26 +190,30 @@ body{
     </select>
 </div>
 
-<!-- 全局背景顏色切換 -->
-<div class="color-container">
-    <button class="color-btn red" onclick="setBgColor('#E8B4B8')"></button>
-    <button class="color-btn blue" onclick="setBgColor('#B8D4F0')"></button>
-    <button class="color-btn green" onclick="setBgColor('#BFDCC2')"></button>
-    <button class="color-btn yellow" onclick="setBgColor('#F4E6B5')"></button>
-    <button class="color-btn gray" onclick="setBgColor('#D5D5D5')"></button>
-    <button class="color-btn white" onclick="setBgColor('#F8F8F8')"></button>
-</div>
-
 <script>
+const colors = [
+    { name: 'red', hex: '#E8B4B8' },
+    { name: 'blue', hex: '#B8D4F0' },
+    { name: 'green', hex: '#BFDCC2' },
+    { name: 'yellow', hex: '#F4E6B5' },
+    { name: 'gray', hex: '#D5D5D5' },
+    { name: 'white', hex: '#FFFFFF' }
+];
+
 // 讀取儲存的人數，預設為 1
 let playerCount = parseInt(localStorage.getItem("playerCount")) || 1;
 document.getElementById("playerCountSelect").value = playerCount;
 
-// 讀取各玩家分數，預設全為 0
+// 讀取各玩家分數與顏色
 let scores = [];
+let playerColors = [];
 for(let i = 0; i < 6; i++) {
     let savedScore = localStorage.getItem("score_p" + i);
     scores.push(savedScore !== null ? parseInt(savedScore) : 0);
+
+    // 預設給每位玩家不同的初始顏色（紅、藍、綠、黃、灰、白）
+    let savedColor = localStorage.getItem("color_p" + i);
+    playerColors.push(savedColor !== null ? savedColor : colors[i % colors.length].hex);
 }
 
 // 建立畫面版面
@@ -219,11 +230,21 @@ function renderApp() {
     for (let i = 0; i < playerCount; i++) {
         let card = document.createElement("div");
         card.className = "player-card";
+        card.style.backgroundColor = playerColors[i]; // 套用該玩家自選的卡片背景色
         
-        let titleText = playerCount === 1 ? "" : `玩家 ${i + 1}`;
+        let titleText = playerCount === 1 ? "計分板" : `玩家 ${i + 1}`;
         
+        // 產生 6 個小圓點顏色按鈕
+        let colorPickerHtml = '';
+        colors.forEach(c => {
+            colorPickerHtml += `<button class="mini-color-btn" style="background:${c.hex}" onclick="setPlayerColor(${i}, '${c.hex}')"></button>`;
+        });
+
         card.innerHTML = `
-            <div class="player-title">${titleText}</div>
+            <div class="player-header">
+                <div class="player-title">${titleText}</div>
+                <div class="player-color-picker">${colorPickerHtml}</div>
+            </div>
             <div class="score-container">
                 <button class="main-btn" onclick="changeScore(${i}, -1)">−</button>
                 <div class="score" id="score_${i}">${scores[i]}</div>
@@ -241,14 +262,19 @@ function changeScore(index, amount) {
         scores[index] = 0;
     }
     
-    // 更新畫面上該玩家的分數
     const scoreEl = document.getElementById(`score_${index}`);
     if (scoreEl) {
         scoreEl.textContent = scores[index];
     }
     
-    // 儲存至 localStorage
     localStorage.setItem("score_p" + index, scores[index]);
+}
+
+// 設定特定玩家的卡片顏色
+function setPlayerColor(index, colorHex) {
+    playerColors[index] = colorHex;
+    localStorage.setItem("color_p" + index, colorHex);
+    renderApp();
 }
 
 // 切換人數
@@ -267,18 +293,7 @@ function resetAllScores() {
     renderApp();
 }
 
-// 設定背景顏色
-function setBgColor(color) {
-    document.body.style.backgroundColor = color;
-    localStorage.setItem("bgColor", color);
-}
-
-// 初始化載入顏色與版面
-const savedColor = localStorage.getItem("bgColor");
-if (savedColor) {
-    setBgColor(savedColor);
-}
-
+// 初始化載入
 renderApp();
 </script>
 
