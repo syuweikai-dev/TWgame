@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>桌遊計分器</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+body{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    font-family:"Arial",sans-serif;
+    transition:.3s;
+    background:#F8F8F8;
+    padding: 20px 0;
+}
+
+/* 多人容器排版 */
+.players-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    max-width: 900px;
+    padding: 0 15px;
+}
+
+.player-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.6);
+    padding: 15px;
+    border-radius: 20px;
+    box-shadow: 0 3px 10px rgba(0,0,0,.08);
+}
+
+.player-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #444;
+}
+
+.score-container{
+    display:flex;
+    align-items:center;
+    gap:15px;
+}
+
+.score{
+    min-width: 140px;
+    text-align:center;
+    font-size: 70px;
+    font-weight:bold;
+    user-select:none;
+}
+
+.main-btn{
+    width: 65px;
+    height: 65px;
+    border:none;
+    border-radius:15px;
+    font-size: 35px;
+    cursor:pointer;
+    background:white;
+    box-shadow:0 3px 10px rgba(0,0,0,.15);
+}
+
+/* 僅單人時讓字體與按鈕變大 */
+.single-mode .score {
+    min-width: 220px;
+    font-size: 120px;
+}
+.single-mode .main-btn {
+    width: 90px;
+    height: 90px;
+    font-size: 50px;
+}
+.single-mode .player-card {
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+}
+.single-mode .player-title {
+    display: none;
+}
+
+.controls{
+    margin-top:25px;
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    align-items:center;
+    gap:15px;
+}
+
+.reset-btn{
+    border:none;
+    padding:10px 20px;
+    border-radius:12px;
+    font-size:16px;
+    cursor:pointer;
+    background:white;
+    box-shadow:0 3px 10px rgba(0,0,0,.15);
+}
+
+/* 下拉選單樣式 */
+.player-select {
+    padding: 10px 15px;
+    border-radius: 12px;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    background: white;
+    box-shadow: 0 3px 10px rgba(0,0,0,.15);
+    outline: none;
+}
+
+.color-container {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+.color-btn{
+    width:40px;
+    height:40px;
+    border:none;
+    border-radius:50%;
+    cursor:pointer;
+    box-shadow:0 2px 6px rgba(0,0,0,.2);
+}
+
+.red{background:#E8B4B8;}
+.blue{background:#B8D4F0;}
+.green{background:#BFDCC2;}
+.yellow{background:#F4E6B5;}
+.gray{background:#D5D5D5;}
+.white{background:#F8F8F8;}
+
+@media(max-width:600px){
+    .single-mode .score{
+        font-size:100px;
+        min-width:180px;
+    }
+    .single-mode .main-btn{
+        width:75px;
+        height:75px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<!-- 動態產生成員版面 -->
+<div id="appContainer" class="players-wrapper single-mode">
+    <!-- 這裡會透過 JavaScript 自動填入 -->
+</div>
+
+<!-- 控制按鈕區 (重置與人數下拉選單) -->
+<div class="controls">
+    <button class="reset-btn" onclick="resetAllScores()">全部重置</button>
+    
+    <select id="playerCountSelect" class="player-select" onchange="changePlayerCount(this.value)">
+        <option value="1">單人模式</option>
+        <option value="2">2 人對戰</option>
+        <option value="3">3 人對戰</option>
+        <option value="4">4 人對戰</option>
+        <option value="5">5 人對戰</option>
+        <option value="6">6 人對戰</option>
+    </select>
+</div>
+
+<!-- 全局背景顏色切換 -->
+<div class="color-container">
+    <button class="color-btn red" onclick="setBgColor('#E8B4B8')"></button>
+    <button class="color-btn blue" onclick="setBgColor('#B8D4F0')"></button>
+    <button class="color-btn green" onclick="setBgColor('#BFDCC2')"></button>
+    <button class="color-btn yellow" onclick="setBgColor('#F4E6B5')"></button>
+    <button class="color-btn gray" onclick="setBgColor('#D5D5D5')"></button>
+    <button class="color-btn white" onclick="setBgColor('#F8F8F8')"></button>
+</div>
+
+<script>
+// 讀取儲存的人數，預設為 1
+let playerCount = parseInt(localStorage.getItem("playerCount")) || 1;
+document.getElementById("playerCountSelect").value = playerCount;
+
+// 讀取各玩家分數，預設全為 0
+let scores = [];
+for(let i = 0; i < 6; i++) {
+    let savedScore = localStorage.getItem("score_p" + i);
+    scores.push(savedScore !== null ? parseInt(savedScore) : 0);
+}
+
+// 建立畫面版面
+function renderApp() {
+    const container = document.getElementById("appContainer");
+    container.innerHTML = "";
+
+    if (playerCount === 1) {
+        container.classList.add("single-mode");
+    } else {
+        container.classList.remove("single-mode");
+    }
+
+    for (let i = 0; i < playerCount; i++) {
+        let card = document.createElement("div");
+        card.className = "player-card";
+        
+        let titleText = playerCount === 1 ? "" : `玩家 ${i + 1}`;
+        
+        card.innerHTML = `
+            <div class="player-title">${titleText}</div>
+            <div class="score-container">
+                <button class="main-btn" onclick="changeScore(${i}, -1)">−</button>
+                <div class="score" id="score_${i}">${scores[i]}</div>
+                <button class="main-btn" onclick="changeScore(${i}, 1)">+</button>
+            </div>
+        `;
+        container.appendChild(card);
+    }
+}
+
+// 改變分數
+function changeScore(index, amount) {
+    scores[index] += amount;
+    if (scores[index] < 0) {
+        scores[index] = 0;
+    }
+    
+    // 更新畫面上該玩家的分數
+    const scoreEl = document.getElementById(`score_${index}`);
+    if (scoreEl) {
+        scoreEl.textContent = scores[index];
+    }
+    
+    // 儲存至 localStorage
+    localStorage.setItem("score_p" + index, scores[index]);
+}
+
+// 切換人數
+function changePlayerCount(count) {
+    playerCount = parseInt(count);
+    localStorage.setItem("playerCount", playerCount);
+    renderApp();
+}
+
+// 重置所有分數
+function resetAllScores() {
+    for (let i = 0; i < 6; i++) {
+        scores[i] = 0;
+        localStorage.setItem("score_p" + i, 0);
+    }
+    renderApp();
+}
+
+// 設定背景顏色
+function setBgColor(color) {
+    document.body.style.backgroundColor = color;
+    localStorage.setItem("bgColor", color);
+}
+
+// 初始化載入顏色與版面
+const savedColor = localStorage.getItem("bgColor");
+if (savedColor) {
+    setBgColor(savedColor);
+}
+
+renderApp();
+</script>
+
+</body>
+</html>
