@@ -11,6 +11,8 @@
     box-sizing:border-box;
     margin:0;
     padding:0;
+    /* 防止手機點擊時出現反光或觸發預設縮放行為 */
+    touch-action: manipulation;
 }
 
 body{
@@ -150,14 +152,6 @@ body{
     outline: none;
 }
 
-/* 6種色彩定義 */
-.c-red{background:#E8B4B8;}
-.c-blue{background:#B8D4F0;}
-.c-green{background:#BFDCC2;}
-.c-yellow{background:#F4E6B5;}
-.c-gray{background:#D5D5D5;}
-.c-white{background:#FFFFFF;}
-
 @media(max-width:600px){
     .single-mode .score{
         font-size:100px;
@@ -211,7 +205,6 @@ for(let i = 0; i < 6; i++) {
     let savedScore = localStorage.getItem("score_p" + i);
     scores.push(savedScore !== null ? parseInt(savedScore) : 0);
 
-    // 預設給每位玩家不同的初始顏色（紅、藍、綠、黃、灰、白）
     let savedColor = localStorage.getItem("color_p" + i);
     playerColors.push(savedColor !== null ? savedColor : colors[i % colors.length].hex);
 }
@@ -230,11 +223,10 @@ function renderApp() {
     for (let i = 0; i < playerCount; i++) {
         let card = document.createElement("div");
         card.className = "player-card";
-        card.style.backgroundColor = playerColors[i]; // 套用該玩家自選的卡片背景色
+        card.style.backgroundColor = playerColors[i];
         
         let titleText = playerCount === 1 ? "計分板" : `玩家 ${i + 1}`;
         
-        // 產生 6 個小圓點顏色按鈕
         let colorPickerHtml = '';
         colors.forEach(c => {
             colorPickerHtml += `<button class="mini-color-btn" style="background:${c.hex}" onclick="setPlayerColor(${i}, '${c.hex}')"></button>`;
@@ -255,12 +247,9 @@ function renderApp() {
     }
 }
 
-// 改變分數
+// 改變分數（允許負數，移除小於 0 的限制）
 function changeScore(index, amount) {
     scores[index] += amount;
-    if (scores[index] < 0) {
-        scores[index] = 0;
-    }
     
     const scoreEl = document.getElementById(`score_${index}`);
     if (scoreEl) {
