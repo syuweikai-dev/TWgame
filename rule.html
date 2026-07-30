@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>台灣寶島：內閣你哪位？快速指南</title>
+<style>
+*{
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    touch-action: manipulation;
+}
+
+body {
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    /* 使用你提供的圖片作為背景，並加上一層半透明遮罩提升文字可讀性 */
+    background: linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)), url('封面_v1 (3).jpg') no-repeat center center fixed;
+    background-size: cover;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 15px;
+    color: #333;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+h1 {
+    font-size: 24px;
+    font-weight: bold;
+    color: #1a1a1a;
+    text-shadow: 0 1px 3px rgba(255,255,255,0.8);
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    font-size: 14px;
+    color: #555;
+}
+
+/* 按鈕導覽列 */
+.nav-buttons {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 20px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px 10px;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+    color: #444;
+}
+
+.tab-btn.active {
+    background: #3b82f6;
+    color: white;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+}
+
+/* 內容面板 (毛玻璃效果) */
+.content-card {
+    width: 100%;
+    max-width: 600px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    margin-bottom: 20px;
+    display: none;
+}
+
+.content-card.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+h2 {
+    font-size: 18px;
+    color: #1e3a8a;
+    margin-bottom: 12px;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 8px;
+}
+
+h3 {
+    font-size: 16px;
+    color: #0f766e;
+    margin-top: 15px;
+    margin-bottom: 6px;
+}
+
+p, li {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #2d3748;
+    margin-bottom: 8px;
+}
+
+ul {
+    padding-left: 20px;
+    margin-bottom: 10px;
+}
+
+.highlight {
+    background: #fef08a;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.tip-box {
+    background: #f1f5f9;
+    border-left: 4px solid #3b82f6;
+    padding: 10px;
+    border-radius: 0 8px 8px 0;
+    margin: 10px 0;
+    font-size: 13px;
+}
+</style>
+</head>
+<body>
+
+<header>
+    <h1>🇹🇼 台灣寶島：內閣你哪位？</h1>
+    <p class="subtitle">新手快速指引手冊</p>
+</header>
+
+<!-- 切換按鈕 -->
+<div class="nav-buttons">
+    <button class="tab-btn active" onclick="switchTab('tab1', this)">🏛️ 回合行動</button>
+    <button class="tab-btn" onclick="switchTab('tab2', this)">⚖️ 遊戲規則</button>
+    <button class="tab-btn" onclick="switchTab('tab3', this)">⭐ 分數計算</button>
+</div>
+
+<!-- 頁面 1：回合行動 -->
+<div id="tab1" class="content-card active">
+    <h2>⏱️ 玩家回合流程</h2>
+    
+    <h3>階段 1：基礎產出資源</h3>
+    <ul>
+        <li>從中央銀行自由選擇拿取：<span class="highlight">1 個人力</span> 或 <span class="highlight">1 個食物</span>。</li>
+    </ul>
+
+    <h3>階段 2：宣告身分、佔領與保留地標</h3>
+    <p>獲得 <span class="highlight">2 點行動點 (AP)</span>，可執行以下行動：</p>
+    <ul>
+        <li>🎭 <b>宣告身分 (1 AP)</b>：口頭宣稱自己擁有某個身分，並執行該身分主動效果（例：宣告金雞部拿1能源）。當回合不可重複宣告相同身分，需承擔被質疑風險。</li>
+        <li>🏛️ <b>佔領地標 (1 AP)</b>：選中央公開市場地標卡，支付資源（如 4能源+4人力+2食物），獲得立即技能或永久被動技能。</li>
+        <li>📦 <b>保留地標 (1 AP)</b>：選中央公開市場地標卡覆蓋在自己面前（限1張），僅自己能買；若遊戲結束未買，將扣除該地標基礎分數！</li>
+        <li>🔍 <b>審查身分 (1 AP)</b>：宣告並猜測對手手上的兩張身分牌，迫使公開並強制換牌。全猜中可額外獲懸賞區 3 個任意資源。</li>
+    </ul>
+
+    <h3>階段 3：回合結束</h3>
+    <ul>
+        <li>📦 檢查手中資源總數（能源+人力+食物）。若超過 10 個，必須自由選擇丟回銀行，直到<span class="highlight">剛好留下 10 個</span>，換下一個玩家。</li>
+    </ul>
+</div>
+
+<!-- 頁面 2：遊戲規則 -->
+<div id="tab2" class="content-card active" style="display:none;">
+    <h2>⚖️ 核心機制與互動</h2>
+    
+    <h3>💰 懸賞機制</h3>
+    <p>回合宣告身分成功拿資源時，銀行會同步放 1 份相同資源到懸賞區（被動或干擾不計）。</p>
+    <div class="tip-box">
+        🔥 <b>發大財技巧</b>：若連續兩次宣告身分成功未被抓包，可翻牌證明說謊，清空並拿走懸賞區所有資源，隨後手牌洗回牌庫重抽（超過10顆資源須棄至10顆）。
+    </div>
+
+    <h3>🗣️ 質疑機制</h3>
+    <p>當有人宣告身分執行技能時，任何人可隨時喊 <b>「你哪位！」</b> 提出質疑：</p>
+    <ul>
+        <li>❌ <b>情況 A：被質疑者「在說謊」</b><br>行動失效。質疑者拿 1 個懸賞區資源，說謊者受懲罰。</li>
+        <li>⭕ <b>情況 B：被質疑者「沒說謊」</b><br>翻牌自清，行動成功！該牌洗回牌庫並重抽一張新身分牌，質疑方受懲罰。</li>
+    </ul>
+    <p><b>⚠️ 懲罰內容</b>：失敗者將 1 張身分牌棄至牌庫並洗勻；且<span class="highlight">下一回合行動點 (AP) 降為 1 點</span>。若無身分牌則無法質疑。</p>
+
+    <h3>🃏 補齊身分牌</h3>
+    <ul>
+        <li><b>缺少 1 張</b>：拿基礎資源，僅能用 1 AP，回合結束後從牌庫補齊 1 張。</li>
+        <li><b>無身分牌</b>：拿基礎資源，<span class="highlight">回合直接結束</span>，從牌庫補齊 2 張。</li>
+    </ul>
+
+    <h3>🔄 資源自由兌換</h3>
+    <p>隨時可不耗 AP，用 <span class="highlight">3 個任意資源</span> 兌換 <span class="highlight">1 個指定資源</span>。</p>
+</div>
+
+<!-- 頁面 3：分數計算 -->
+<div id="tab3" class="content-card" style="display:none;">
+    <h2>🏆 遊戲結算與計分</h2>
+    
+    <ul>
+        <li>🏷️ <b>地標卡基本分數</b>：顯示於地標卡左上方數字。</li>
+        <li>🔗 <b>連動加分</b>：身份卡右上方標籤 vs 地標卡右上方標籤（現代建設、自然風景、歷史古蹟、美食小吃）。<br>
+            遊戲結束時，若標籤相符可獲得額外加分：<br>
+            <span class="highlight">每一張「現代建設」 +2 分</span><br>
+            <span class="highlight">其餘標籤各 +1 分</span>
+        </li>
+        <li>⚡ <b>地標卡特殊技能</b>：依地標卡文字解說（例：饒河夜市、綠島燈塔等特殊效果）。</li>
+    </ul>
+</div>
+
+<script>
+function switchTab(tabId, btn) {
+    // 隱藏所有內容卡片
+    const cards = document.querySelectorAll('.content-card');
+    cards.forEach(card => card.style.display = 'none');
+
+    // 移除所有按鈕的 active 狀態
+    const buttons = document.querySelectorAll('.tab-btn');
+    buttons.forEach(button => button.classList.remove('active'));
+
+    // 顯示點擊的卡片並點亮按鈕
+    document.getElementById(tabId).style.display = 'block';
+    btn.classList.add('active');
+}
+</script>
+
+</body>
+</html>
