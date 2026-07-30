@@ -15,8 +15,8 @@
 body {
     min-height: 100vh;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    /* 使用你提供的圖片作為背景，並加上一層半透明遮罩提升文字可讀性 */
-    background: linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)), url('封面_v1 (3).jpg') no-repeat center center fixed;
+    /* 使用你提供的背景圖片，並加上半透明遮罩提升文字可讀性 */
+    background: linear-gradient(rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.78)), url('封面_v1 (3)_2.jpg') no-repeat center center fixed;
     background-size: cover;
     display: flex;
     flex-direction: column;
@@ -168,7 +168,7 @@ ul {
         <li>🎭 <b>宣告身分 (1 AP)</b>：口頭宣稱自己擁有某個身分，並執行該身分主動效果（例：宣告金雞部拿1能源）。當回合不可重複宣告相同身分，需承擔被質疑風險。</li>
         <li>🏛️ <b>佔領地標 (1 AP)</b>：選中央公開市場地標卡，支付資源（如 4能源+4人力+2食物），獲得立即技能或永久被動技能。</li>
         <li>📦 <b>保留地標 (1 AP)</b>：選中央公開市場地標卡覆蓋在自己面前（限1張），僅自己能買；若遊戲結束未買，將扣除該地標基礎分數！</li>
-        <li>🔍 <b>審查身分 (1 AP)</b>：宣告並猜測對手手上的兩張身分牌，迫使公開並強制換牌。全猜中可額外獲懸賞區 3 個任意資源。</li>
+        <li>🔍 <b>審查身分 (1 AP)</b>：宣告並猜測對手手上的<span class="highlight">兩張或以上身分牌</span>，迫使對手公開身分並強制換牌。若全部猜中，可額外獲得懸賞區內的 3 個任意資源。<br><span style="color: #b91c1c; font-size: 13px;">⚠️ 註記：若對手只有一張身分牌，則無法使用此行動。</span></li>
     </ul>
 
     <h3>階段 3：回合結束</h3>
@@ -178,11 +178,12 @@ ul {
 </div>
 
 <!-- 頁面 2：遊戲規則 -->
-<div id="tab2" class="content-card active" style="display:none;">
+<div id="tab2" class="content-card" style="display:none;">
     <h2>⚖️ 核心機制與互動</h2>
     
     <h3>💰 懸賞機制</h3>
-    <p>回合宣告身分成功拿資源時，銀行會同步放 1 份相同資源到懸賞區（被動或干擾不計）。</p>
+    <p>玩家在自己回合宣告身分，觸發主動技能並成功從銀行或其他玩家拿取資源時，銀行會同步放 1 份完全相同的資源到懸賞區。（註：發動被動技能或干擾對手時，不會增加懸賞區資源）。</p>
+    <p>當有玩家審查你的身份並如果全部猜中，可從懸賞區內獲得 3 個任意資源。</p>
     <div class="tip-box">
         🔥 <b>發大財技巧</b>：若連續兩次宣告身分成功未被抓包，可翻牌證明說謊，清空並拿走懸賞區所有資源，隨後手牌洗回牌庫重抽（超過10顆資源須棄至10顆）。
     </div>
