@@ -229,6 +229,14 @@ ul {
     font-size: 13px;
     cursor: pointer;
 }
+
+.reserved-penalty-box {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 12px;
+    margin-top: 15px;
+}
 </style>
 </head>
 <body>
@@ -298,10 +306,25 @@ ul {
         <div id="identityContainer" class="checkbox-grid"></div>
     </div>
 
+    <div class="reserved-penalty-box">
+        <h3>📦 未購買之保留地標（扣分項）</h3>
+        <p style="font-size: 12px; color: #666; margin-bottom: 8px;">遊戲結束若有保留但未買的地標，需扣除其基礎分數：</p>
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+            <span>是否有保留地標？</span>
+            <label><input type="radio" name="hasReserved" value="no" checked onchange="toggleReservedDropdown(); calculateScore();"> 否</label>
+            <label><input type="radio" name="hasReserved" value="yes" onchange="toggleReservedDropdown(); calculateScore();"> 是</label>
+        </div>
+        <div id="reservedSelectContainer" style="display: none;">
+            <select id="reservedLandmarkSelect" style="width: 100%; padding: 6px; font-size: 13px; border-radius: 6px; border: 1px solid #cbd5e1;" onchange="calculateScore()">
+                <option value="-1">請選擇保留且未買的地標</option>
+            </select>
+        </div>
+    </div>
+
     <div class="score-result-box">
         <h3>總得分</h3>
         <div class="score-number" id="totalScore">0 分</div>
-        <div class="score-detail" id="scoreDetail">基本分: 0 | 標籤連動: 0 | Combo加減分: 0</div>
+        <div class="score-detail" id="scoreDetail">基本分: 0 | 標籤連動: 0 | Combo加減分: 0 | 保留地標扣分: 0</div>
         <button class="reset-score-btn" onclick="resetCalculator()">重置計算機</button>
     </div>
 </div>
@@ -369,6 +392,8 @@ const identities = [
 
 function initCalculator() {
     const lmContainer = document.getElementById("landmarkContainer");
+    const reservedSelect = document.getElementById("reservedLandmarkSelect");
+
     landmarks.forEach((item, index) => {
         let label = document.createElement("label");
         label.className = "checkbox-item";
@@ -392,7 +417,8 @@ function initCalculator() {
         if (item.isDoubleSelector) {
             let options = '<option value="-1">無加倍</option>';
             for (let i = 0; i < landmarks.length; i++) {
-                options += '<option value="' + i + '">' + landmarks[i].name + '(' + landmarks[i].score + '分)</option>';
+                let doubledScore = landmarks[i].score * 2;
+                options += '<option value="' + i + '">' + landmarks[i].name + ' (' + doubledScore + '分)</option>';
             }
             extraHtml += '<div class="combo-control" onclick="event.stopPropagation()"><span>101加倍:</span><select id="double_target_' + index + '" onchange="handle101Select(' + index + '); calculateScore()">' + options + '</select></div>';
         }
@@ -420,6 +446,12 @@ function initCalculator() {
             '<span>' + item.name + ' (' + item.score + '分)</span>' +
             '</div>' + extraHtml;
         lmContainer.appendChild(label);
+
+        // 填充保留地標下拉選單
+        let resOpt = document.createElement("option");
+        resOpt.value = index;
+        resOpt.textContent = item.name + " (" + item.score + "分)";
+        reservedSelect.appendChild(resOpt);
     });
 
     const idContainer = document.getElementById("identityContainer");
@@ -432,6 +464,17 @@ function initCalculator() {
             '</div>';
         idContainer.appendChild(label);
     });
+}
+
+function toggleReservedDropdown() {
+    let hasReservedVal = document.querySelector('input[name="hasReserved"]:checked').value;
+    let container = document.getElementById("reservedSelectContainer");
+    if (hasReservedVal === "yes") {
+        container.style.display = "block";
+    } else {
+        container.style.display = "none";
+        document.getElementById("reservedLandmarkSelect").value = "-1";
+    }
 }
 
 function handle101Select(target101Index) {
@@ -469,6 +512,7 @@ function calculateScore() {
     let baseScore = 0;
     let synergyBonus = 0;
     let comboBonus = 0;
+    let reservedPenalty = 0;
 
     let identityTags = {};
     const idCheckboxes = document.querySelectorAll("#identityContainer input:checked");
@@ -489,7 +533,7 @@ function calculateScore() {
     let hasFengshiye = checkedLandmarks.some(function(l) { return l.name === "金門風獅爺"; });
     let hasLongtan = checkedLandmarks.some(function(l) { return l.name === "屏東鵝鑾鼻燈塔"; });
 
-    // 指定夜市加分牌限定名單（嚴格限縮）
+    // 指定夜市加分牌限定名單
     let targetNightMarketNames = ["廟口夜市", "逢甲夜市", "羅東夜市", "台南花園夜市", "饒河夜市"];
     
     // 收集所有持有的指定夜市牌物件
@@ -511,7 +555,6 @@ function calculateScore() {
         }
     });
 
-    // 去除重複的夜市物件
     let uniqueNightMarkets = Array.from(new Set(activeNightMarketObjects));
 
     landmarks.forEach(function(lm, idx) {
@@ -536,7 +579,7 @@ function calculateScore() {
         if (lm.name === "金門莒光樓" && hasFengshiye) currentCardScore = 5;
         if (lm.name === "金門風獅爺" && hasGuguan) currentCardScore = 5;
 
-        // 台北101加倍處理：直接將目標地標的完整基礎/特殊分乘以 2 (即再加一次完整分數)
+        // 台北101加倍處理：直接將目標地標的完整基礎分數 * 2 加入 Combo 獎勵中
         if (lm.isDoubleSelector && isChecked) {
             let sel = document.getElementById("double_target_" + idx);
             let targetIdx = parseInt(sel.value);
@@ -546,7 +589,7 @@ function calculateScore() {
                 if (targetLm.name === "金門莒光樓" && hasFengshiye) targetScore = 5;
                 if (targetLm.name === "金門風獅爺" && hasGuguan) targetScore = 5;
                 
-                comboBonus += targetScore;
+                comboBonus += (targetScore * 2);
             }
         }
 
@@ -612,14 +655,14 @@ function calculateScore() {
         }
     });
 
-    // 計算「自己持有饒河夜市」的被動：扣除自己後，其他指定的夜市牌每張 +2 分
+    // 饒河夜市被動：扣除自己後，其他指定的夜市牌每張 +2 分
     let hasRealRahe = checkedLandmarks.some(function(l) { return l.name === "饒河夜市"; });
     if (hasRealRahe) {
         let otherNightMarketsCount = uniqueNightMarkets.filter(function(nm) { return nm.name !== "饒河夜市"; }).length;
         comboBonus += otherNightMarketsCount * 2;
     }
 
-    // 檢查是否有透過「廟口夜市複製饒河夜市」
+    // 廟口夜市複製饒河夜市：包含自己（廟口夜市本身），所有在清單內的夜市牌每張 +2 分（不直接影響 Combo 分數，它只是加成夜市被動）
     let hasMiaokouCopyRahe = false;
     landmarks.forEach(function(lm, idx) {
         if (lm.name === "廟口夜市") {
@@ -633,15 +676,27 @@ function calculateScore() {
         }
     });
 
-    // 廟口夜市複製饒河夜市：包含自己（即廟口夜市本身），所有在清單內的夜市牌每張 +2 分
     if (hasMiaokouCopyRahe) {
         comboBonus += uniqueNightMarkets.length * 2;
     }
 
-    let grandTotal = baseScore + synergyBonus + comboBonus;
+    // 計算保留地標扣分
+    let hasReservedVal = document.querySelector('input[name="hasReserved"]:checked').value;
+    if (hasReservedVal === "yes") {
+        let reservedIdx = parseInt(document.getElementById("reservedLandmarkSelect").value);
+        if (reservedIdx !== -1) {
+            let reservedLm = landmarks[reservedIdx];
+            let resScore = reservedLm.score;
+            if (reservedLm.name === "金門莒光樓" && hasFengshiye) resScore = 5;
+            if (reservedLm.name === "金門風獅爺" && hasGuguan) resScore = 5;
+            reservedPenalty = resScore;
+        }
+    }
+
+    let grandTotal = baseScore + synergyBonus + comboBonus - reservedPenalty;
 
     document.getElementById("totalScore").textContent = grandTotal + " 分";
-    document.getElementById("scoreDetail").textContent = "地標基本分: " + baseScore + " | 標籤連動: " + synergyBonus + " | Combo加減分: " + comboBonus;
+    document.getElementById("scoreDetail").textContent = "地標基本分: " + baseScore + " | 標籤連動: " + synergyBonus + " | Combo加減分: " + comboBonus + " | 保留地標扣分: -" + reservedPenalty;
 }
 
 function resetCalculator() {
@@ -651,6 +706,8 @@ function resetCalculator() {
     });
     document.querySelectorAll(".calculator-section input[type='number']").forEach(function(input) { input.value = 0; });
     document.querySelectorAll(".calculator-section select").forEach(function(sel) { sel.value = sel.options[0].value; });
+    document.querySelector('input[name="hasReserved"][value="no"]').checked = true;
+    toggleReservedDropdown();
     calculateScore();
 }
 
