@@ -417,10 +417,11 @@ function initCalculator() {
         if (item.isDoubleSelector) {
             let options = '<option value="-1">無加倍</option>';
             for (let i = 0; i < landmarks.length; i++) {
-                let doubledScore = landmarks[i].score * 2;
-                options += '<option value="' + i + '">' + landmarks[i].name + ' (' + doubledScore + '分)</option>';
+                // a. 101加倍內的選單敘述 還原成原本的數字（非加倍後數字）
+                options += '<option value="' + i + '">' + landmarks[i].name + ' (' + landmarks[i].score + '分)</option>';
             }
-            extraHtml += '<div class="combo-control" onclick="event.stopPropagation()"><span>101加倍:</span><select id="double_target_' + index + '" onchange="calculateScore()">' + options + '</select></div>';
+            // b. 選擇後會連動強制勾選該地標，且 101 本身改為固定 +3 分供平衡
+            extraHtml += '<div class="combo-control" onclick="event.stopPropagation()"><span>101加倍:</span><select id="double_target_' + index + '" onchange="handle101Selection(' + index + '); calculateScore()">' + options + '</select></div>';
         }
 
         if (item.isModernCopyCard) {
@@ -476,6 +477,18 @@ function toggleReservedDropdown() {
     }
 }
 
+// b. 當 101 下拉選單選擇時，自動幫玩家強制勾選該地標
+function handle101Selection(index101) {
+    let sel = document.getElementById("double_target_" + index101);
+    let targetIdx = parseInt(sel.value);
+    if (targetIdx !== -1) {
+        let targetChk = document.getElementById("chk_lm_" + targetIdx);
+        if (targetChk) {
+            targetChk.checked = true;
+        }
+    }
+}
+
 function calculateScore() {
     let baseScore = 0;
     let synergyBonus = 0;
@@ -491,36 +504,20 @@ function calculateScore() {
         }
     });
 
-    // 收集「實體勾選」或「被 101 選中加倍」的所有有效卡片
+    // 收集所有被手動勾選或被強制勾選的地標
     let effectiveLandmarks = [];
     
     landmarks.forEach(function(item, idx) {
         let chk = document.getElementById("chk_lm_" + idx);
-        let isChecked = chk && chk.checked;
-        let is101Target = false;
-
-        // 檢查是否被任何一個 101 選為加倍對象
-        landmarks.forEach(function(parentLm, pIdx) {
-            if (parentLm.isDoubleSelector) {
-                let pChk = document.getElementById("chk_lm_" + pIdx);
-                let sel = document.getElementById("double_target_" + pIdx);
-                if (pChk && pChk.checked && sel && parseInt(sel.value) === idx) {
-                    is101Target = true;
-                }
-            }
-        });
-
-        if (isChecked || is101Target) {
+        if (chk && chk.checked) {
             effectiveLandmarks.push({
                 item: item,
-                index: idx,
-                isChecked: isChecked,
-                is101Target: is101Target
+                index: idx
             });
         }
     });
 
-    // 計算特定標籤的擁有數量（包含101加倍或本身勾選的）
+    // 計算標籤總數
     let natureCount = effectiveLandmarks.filter(function(el) { return el.item.tag === "自然風景"; }).length;
     let historicCount = effectiveLandmarks.filter(function(el) { return el.item.tag === "歷史古蹟"; }).length;
     let modernCount = effectiveLandmarks.filter(function(el) { return el.item.tag === "現代建設"; }).length;
@@ -536,8 +533,7 @@ function calculateScore() {
         if (targetNightMarketNames.includes(el.item.name)) {
             activeNightMarketNamesSet.add(el.item.name);
         }
-        // 檢查是否有夜市複製卡（如廟口夜市複製）
-        if (el.item.isFoodCopyCard && el.isChecked) {
+        if (el.item.isFoodCopyCard) {
             let sel = document.getElementById("copy_food_" + el.index);
             if (sel && sel.value !== "-1") {
                 if (targetNightMarketNames.includes(sel.value)) {
@@ -547,7 +543,7 @@ function calculateScore() {
         }
     });
 
-    // 逐張計算卡片的分數與被動技能
+    // 逐張計算勾選卡片的分數、身分連動與被動技能
     effectiveLandmarks.forEach(function(el) {
         let lm = el.item;
         let idx = el.index;
@@ -557,56 +553,51 @@ function calculateScore() {
         if (lm.name === "金門莒光樓" && hasFengshiye) currentCardScore = 5;
         if (lm.name === "金門風獅爺" && hasGuguan) currentCardScore = 5;
 
-        // 若是 101 加倍目標 $\rightarrow$ 基礎分翻倍計入 Combo 獎勵，並完整繼承被動技能！
-        if (el.is101Target) {
-            comboBonus += (currentCardScore * 2);
-        }
+        baseScore += currentCardScore;
 
-        // 若是自己有勾選 $\rightarrow$ 賺取基本分與身分證連動
-        if (el.isChecked) {
-            baseScore += currentCardScore;
-
-            if (identityTags[lm.tag] && identityTags[lm.tag] > 0) {
-                if (lm.tag === "現代建設") {
-                    synergyBonus += 2;
-                } else {
-                    synergyBonus += 1;
-                }
+        // c. 台北101本身的特殊處理：如果勾選了 101，且下拉有指定加倍目標，則 101 卡本身單純 +3 分補足差額
+        if (lm.isDoubleSelector) {
+            let sel = document.getElementById("double_target_" + idx);
+            if (sel && parseInt(sel.value) !== -1) {
+                comboBonus += 3;
             }
         }
 
-        // 無論是 101 加倍還是自身勾選，只要卡片在場上生效，其「被動技能」就必須完整觸發！
-        // 1. 高美濕地人力
-        if (lm.hasWorkerInput && el.isChecked) {
+        // 身分證連動
+        if (identityTags[lm.tag] && identityTags[lm.tag] > 0) {
+            if (lm.tag === "現代建設") {
+                synergyBonus += 2;
+            } else {
+                synergyBonus += 1;
+            }
+        }
+
+        // 各地標技能計算
+        if (lm.hasWorkerInput) {
             let workers = parseInt(document.getElementById("worker_" + idx).value) || 0;
             comboBonus += workers * 1;
         }
 
-        // 2. 日月潭被動：結算時計有其他自然風景/戶外牌，1張可額外獲得 2分
         if (lm.hasNatureCombo) {
             let otherNature = natureCount - 1;
             if (otherNature > 0) comboBonus += otherNature * 2;
         }
 
-        // 3. 九份老街被動：扣除自己後其他歷史古蹟每張 -1 分
         if (lm.hasHistoricPenalty) {
             let otherHistoric = historicCount - 1;
             if (otherHistoric > 0) comboBonus -= otherHistoric * 1;
         }
 
-        // 4. 機場被動：其他現代建設每張 +3 分
         if (lm.hasModernAirport) {
             let otherModern = modernCount - 1;
             if (otherModern > 0) comboBonus += otherModern * 3;
         }
 
-        // 5. 綠島燈塔被動：若有鵝鑾鼻燈塔 +2 分
         if (lm.hasLighthouseCombo && hasLongtan) {
             comboBonus += 2;
         }
 
-        // 6. 新北市美術館（複製現代建設）
-        if (lm.isModernCopyCard && el.isChecked) {
+        if (lm.isModernCopyCard) {
             let sel = document.getElementById("copy_modern_" + idx);
             if (sel) {
                 let copiedName = sel.value;
@@ -620,8 +611,7 @@ function calculateScore() {
             }
         }
 
-        // 7. 蘭嶼拼板舟（複製歷史古蹟）
-        if (lm.isHistoricCopyCard && el.isChecked) {
+        if (lm.isHistoricCopyCard) {
             let sel = document.getElementById("copy_historic_" + idx);
             if (sel) {
                 let copiedName = sel.value;
@@ -631,8 +621,7 @@ function calculateScore() {
             }
         }
 
-        // 8. 廟口夜市（複製夜市）
-        if (lm.isFoodCopyCard && el.isChecked) {
+        if (lm.isFoodCopyCard) {
             let sel = document.getElementById("copy_food_" + idx);
             if (sel && sel.value !== "-1") {
                 activeNightMarketNamesSet.add(sel.value);
@@ -640,12 +629,11 @@ function calculateScore() {
         }
     });
 
-    // 夜市總被動計算：
-    // 饒河夜市或其他夜市的被動：除了自己這張牌之外，場上每存在一張指定的夜市牌 +2 分
+    // 夜市總被動計算
     let hasRealRahe = effectiveLandmarks.some(function(el) { return el.item.name === "饒河夜市"; });
     let hasMiaokouCopyRahe = false;
     effectiveLandmarks.forEach(function(el) {
-        if (el.item.name === "廟口夜市" && el.isChecked) {
+        if (el.item.name === "廟口夜市") {
             let sel = document.getElementById("copy_food_" + el.index);
             if (sel && sel.value === "饒河夜市") {
                 hasMiaokouCopyRahe = true;
@@ -653,27 +641,7 @@ function calculateScore() {
         }
     });
 
-    // 如果場上有「真實饒河夜市」
-    if (hasRealRahe) {
-        let countWithoutRahe = activeLandmarksCountExcluding(effectiveLandmarks, "饒河夜市", activeNightMarketNamesSet);
-        // 為了避免重複疊加，精準計算饒河帶來的加分
-        let totalNightMarkets = Array.from(activeNightMarketNamesSet).length;
-        if (totalNightMarkets > 1) {
-            comboBonus += (totalNightMarkets - 1) * 2;
-        }
-    }
-
-    // 如果場上有「廟口夜市複製饒河夜市」（修正重複計算，讓它乖乖顯示 2 分而不是 4 分）
-    if (hasMiaokouCopyRahe && !hasRealRahe) {
-        let totalNightMarkets = Array.from(activeNightMarketNamesSet).length;
-        if (totalNightMarkets > 1) {
-            comboBonus += (totalNightMarkets - 1) * 2;
-        } else {
-            // 如果只有自己複製饒河，但場上沒有其他夜市，加分為 0；若有其他夜市則依數量給分
-            comboBonus += totalNightMarkets * 2;
-        }
-    } else if (hasMiaokouCopyRahe && hasRealRahe) {
-        // 如果同時有真實饒河跟廟口複製饒河，夜市連動總數統一計算
+    if (hasRealRahe || hasMiaokouCopyRahe) {
         let totalNightMarkets = Array.from(activeNightMarketNamesSet).length;
         if (totalNightMarkets > 1) {
             comboBonus += (totalNightMarkets - 1) * 2;
@@ -697,10 +665,6 @@ function calculateScore() {
 
     document.getElementById("totalScore").textContent = grandTotal + " 分";
     document.getElementById("scoreDetail").textContent = "地標基本分: " + baseScore + " | 標籤連動: " + synergyBonus + " | Combo加減分: " + comboBonus + " | 保留地標扣分: -" + reservedPenalty;
-}
-
-function activeLandmarksCountExcluding(effectiveLandmarks, excludeName, nightMarketSet) {
-    return nightMarketSet.size > 0 ? nightMarketSet.size - 1 : 0;
 }
 
 function resetCalculator() {
