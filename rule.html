@@ -580,11 +580,10 @@ function calculateScore() {
         if (validNightMarketNames.includes(el.item.name)) {
             let hasRahePassive = (el.item.name === "饒河夜市");
             
-            // 如果是廟口夜市，檢查它是否複製了「饒河夜市」的技能
             if (el.item.isFoodCopyCard) {
                 let sel = document.getElementById("copy_food_" + el.index);
                 if (sel && sel.value === "饒河夜市") {
-                    hasRahePassive = true; // 獲得了跟 E 一樣的技能判定
+                    hasRahePassive = true;
                 }
             }
 
@@ -651,6 +650,7 @@ function calculateScore() {
             comboBonus += 2;
         }
 
+        // 新北市美術館（複製現代卡）自身因複製技能獲得的加分
         if (lm.isModernCopyCard) {
             let sel = document.getElementById("copy_modern_" + idx);
             if (sel) {
@@ -660,34 +660,35 @@ function calculateScore() {
                     if (otherModern > 0) comboBonus += otherModern * 3;
                 }
                 if (copiedName === "綠島燈塔" && hasLongtan) {
-                    comboBonus += 2;
+                    comboBonus += 2; // 自己複製了綠島燈塔，且場上有鵝鑾鼻燈塔，自己獲得 +2 分！
                 }
             }
         }
 
+        // 蘭嶼拼板舟（複製古蹟卡）自身因複製技能獲得的加分
         if (lm.isHistoricCopyCard) {
             let sel = document.getElementById("copy_historic_" + idx);
             if (sel) {
                 let copiedName = sel.value;
-                if ((copiedName === "金門莒光樓" || copiedName === "金門風獅爺") && hasGuguan && hasFengshiye) {
-                    comboBonus += 5;
+                // 如果複製了莒光樓，且場上有風獅爺
+                if (copiedName === "金門莒光樓" && hasFengshiye) {
+                    comboBonus += 5; // 自己獲得 +5 分！
+                }
+                // 如果複製了風獅爺，且場上有莒光樓
+                if (copiedName === "金門風獅爺" && hasGuguan) {
+                    comboBonus += 5; // 自己獲得 +5 分！
                 }
             }
         }
     });
 
-// 核心夜市被動精準計算：
-    // 每有一張具備「饒河技能（本尊或被複製）」的夜市牌，
-    // 它會去掃描場上「除了自己以外」還有多少張其他的夜市牌，有幾張就貢獻幾張 * 2 分。
-    // 如果半張其他夜市都沒有（例如場上只有 A 複製 E 自己一張），則貢獻 0 分！
+    // 夜市被動計算
     nightMarketListWithSource.forEach(function(market) {
         if (market.hasPassive) {
-            // 找出除了這張卡自己以外，場上還有多少張其他的夜市牌
             let otherMarkets = nightMarketListWithSource.filter(function(m) {
                 return m.cardIndex !== market.cardIndex;
             });
             
-            // 只有當「其他夜市牌的數量 > 0」時，才會產生加分
             if (otherMarkets.length > 0) {
                 comboBonus += otherMarkets.length * 2;
             }
