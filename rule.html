@@ -475,7 +475,7 @@ function toggleReservedDropdown() {
     }
 }
 
-// 當 101 下拉選單選擇時，自動幫玩家強制勾選該地標
+// 當 101 下拉選單選擇目標時，自動幫玩家勾選該目標地標
 function handle101Selection() {
     landmarks.forEach(function(item, idx) {
         if (item.isDoubleSelector) {
@@ -490,9 +490,21 @@ function handle101Selection() {
     });
 }
 
-// 當手動取消某個地標勾選時，若有 101 正好以它為加倍目標，則自動將該 101 的選單歸零，避免單向卡住
+// 當地標勾選狀態改變時的連動邏輯
 function handleLandmarkCheckboxChange(index) {
     let chk = document.getElementById("chk_lm_" + index);
+    
+    // 狀況 1：如果取消勾選的是「台北 101」，則自動把它的 101加倍選單歸零（無加倍）
+    landmarks.forEach(function(item, idx) {
+        if (item.isDoubleSelector && idx === index) {
+            if (!chk.checked) {
+                let sel = document.getElementById("double_target_" + idx);
+                if (sel) sel.value = "-1";
+            }
+        }
+    });
+
+    // 狀況 2：如果手動取消勾選的是「被加倍的地標」，檢查是否還有 101 在加倍它，若有則把該 101 的選單歸零
     if (!chk.checked) {
         landmarks.forEach(function(item, idx) {
             if (item.isDoubleSelector) {
@@ -520,7 +532,7 @@ function calculateScore() {
         }
     });
 
-    // 檢查 101 是否取消勾選：若取消勾選，連動的加倍地標選單也必須自動清除並釋放
+    // 檢查 101 本身是否被取消勾選：若 101 沒勾選，強制將其下拉選單歸零
     landmarks.forEach(function(item, idx) {
         if (item.isDoubleSelector) {
             let chk = document.getElementById("chk_lm_" + idx);
@@ -531,7 +543,23 @@ function calculateScore() {
         }
     });
 
-    // 執行一次自動勾選連動檢查
+    // 檢查「若 101 有勾選且選了目標，目標地標必須保持勾選」
+    landmarks.forEach(function(item, idx) {
+        if (item.isDoubleSelector) {
+            let chk = document.getElementById("chk_lm_" + idx);
+            let sel = document.getElementById("double_target_" + idx);
+            if (chk && chk.checked && sel && parseInt(sel.value) !== -1) {
+                let targetIdx = parseInt(sel.value);
+                let targetChk = document.getElementById("chk_lm_" + targetIdx);
+                if (targetChk && !targetChk.checked) {
+                    // 如果被加倍的地標手動被取消了，連動清除 101 的選單
+                    sel.value = "-1";
+                }
+            }
+        }
+    });
+
+    // 再次執行一次自動勾選
     handle101Selection();
 
     // 收集所有被勾選的地標
@@ -584,7 +612,7 @@ function calculateScore() {
 
         baseScore += currentCardScore;
 
-        // 台北101加倍處理：精準加上被選中地標的「原本基礎分數」，完美對應雙倍計分
+        // 台北101加倍處理：精準加上被選中地標的「原本基礎分數」（作為加倍的額外加分）
         if (lm.isDoubleSelector) {
             let sel = document.getElementById("double_target_" + idx);
             if (sel && parseInt(sel.value) !== -1) {
