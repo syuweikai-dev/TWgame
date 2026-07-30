@@ -489,11 +489,13 @@ function calculateScore() {
     let hasFengshiye = checkedLandmarks.some(function(l) { return l.name === "金門風獅爺"; });
     let hasLongtan = checkedLandmarks.some(function(l) { return l.name === "屏東鵝鑾鼻燈塔"; });
 
-    let nightMarketNames = ["旗山老街", "逢甲夜市", "廟口夜市", "平溪天燈", "淡水老街", "九份老街", "羅東夜市", "饒河夜市", "鹿港老街", "台南花園夜市"];
+    // 指定夜市加分牌限定名單（嚴格限縮）
+    let targetNightMarketNames = ["廟口夜市", "逢甲夜市", "羅東夜市", "台南花園夜市", "饒河夜市"];
     
-    // 收集所有持有的夜市清單（用於夜市牌計算）
-    let activeNightMarketObjects = checkedLandmarks.filter(function(l) { return nightMarketNames.includes(l.name); });
+    // 收集所有持有的指定夜市牌物件
+    let activeNightMarketObjects = checkedLandmarks.filter(function(l) { return targetNightMarketNames.includes(l.name); });
 
+    // 檢查廟口夜市複製卡是否複製了指定夜市牌
     landmarks.forEach(function(lm, idx) {
         if (lm.name === "廟口夜市") {
             let chk = document.getElementById("chk_lm_" + idx);
@@ -501,7 +503,9 @@ function calculateScore() {
                 let sel = document.getElementById("copy_food_" + idx);
                 if (sel && sel.value !== "-1") {
                     let copiedLm = landmarks.find(function(l) { return l.name === sel.value; });
-                    if (copiedLm) activeNightMarketObjects.push(copiedLm);
+                    if (copiedLm && targetNightMarketNames.includes(copiedLm.name)) {
+                        activeNightMarketObjects.push(copiedLm);
+                    }
                 }
             }
         }
@@ -532,7 +536,7 @@ function calculateScore() {
         if (lm.name === "金門莒光樓" && hasFengshiye) currentCardScore = 5;
         if (lm.name === "金門風獅爺" && hasGuguan) currentCardScore = 5;
 
-        // 台北101加倍處理：將目標地標的完整基礎/覆蓋分直接再加一次（達成 2 倍效果）
+        // 台北101加倍處理：直接將目標地標的完整基礎/特殊分乘以 2 (即再加一次完整分數)
         if (lm.isDoubleSelector && isChecked) {
             let sel = document.getElementById("double_target_" + idx);
             let targetIdx = parseInt(sel.value);
@@ -599,11 +603,6 @@ function calculateScore() {
             let otherHistoric = historicCount - 1;
             if (otherHistoric > 0) comboBonus -= otherHistoric * 1;
         }
-        if (lm.name === "饒河夜市") {
-            // 饒河夜市被動：扣除自己後，計算其他夜市牌每張 +2 分
-            let otherCount = uniqueNightMarkets.filter(function(nm) { return nm.name !== "饒河夜市"; }).length;
-            comboBonus += otherCount * 2;
-        }
         if (lm.name === "桃園國際機場") {
             let otherModern = modernCount - 1;
             if (otherModern > 0) comboBonus += otherModern * 3;
@@ -613,7 +612,14 @@ function calculateScore() {
         }
     });
 
-    // 檢查是否有透過廟口夜市複製出「饒河夜市」效果，若有也要觸發其被動
+    // 計算「自己持有饒河夜市」的被動：扣除自己後，其他指定的夜市牌每張 +2 分
+    let hasRealRahe = checkedLandmarks.some(function(l) { return l.name === "饒河夜市"; });
+    if (hasRealRahe) {
+        let otherNightMarketsCount = uniqueNightMarkets.filter(function(nm) { return nm.name !== "饒河夜市"; }).length;
+        comboBonus += otherNightMarketsCount * 2;
+    }
+
+    // 檢查是否有透過「廟口夜市複製饒河夜市」
     let hasMiaokouCopyRahe = false;
     landmarks.forEach(function(lm, idx) {
         if (lm.name === "廟口夜市") {
@@ -627,9 +633,9 @@ function calculateScore() {
         }
     });
 
-    if (hasMiaokouCopyRahe && !checkedLandmarks.some(function(l) { return l.name === "饒河夜市"; })) {
-        let otherCount = uniqueNightMarkets.filter(function(nm) { return nm.name !== "饒河夜市"; }).length;
-        comboBonus += otherCount * 2;
+    // 廟口夜市複製饒河夜市：包含自己（即廟口夜市本身），所有在清單內的夜市牌每張 +2 分
+    if (hasMiaokouCopyRahe) {
+        comboBonus += uniqueNightMarkets.length * 2;
     }
 
     let grandTotal = baseScore + synergyBonus + comboBonus;
