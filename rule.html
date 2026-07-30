@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>台灣寶島：內閣你哪位？快速指南</title>
+<title>台灣寶島：內閣你哪位？快速指南與計分器</title>
 <style>
 *{
     box-sizing: border-box;
@@ -15,7 +15,6 @@
 body {
     min-height: 100vh;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    /* 使用你提供的背景圖片，並加上半透明遮罩提升文字可讀性 */
     background: linear-gradient(rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.78)), url('bg.png') no-repeat center center fixed;
     background-size: cover;
     display: flex;
@@ -43,27 +42,30 @@ h1 {
     color: #555;
 }
 
-/* 按鈕導覽列 */
+/* 按鈕導覽列 (改為 4 個按鈕自動分配) */
 .nav-buttons {
     display: flex;
-    gap: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
     width: 100%;
-    max-width: 600px;
+    max-width: 650px;
     margin-bottom: 20px;
 }
 
 .tab-btn {
     flex: 1;
-    padding: 12px 10px;
+    min-width: 130px;
+    padding: 12px 8px;
     border: none;
     border-radius: 12px;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: bold;
     cursor: pointer;
     background: rgba(255, 255, 255, 0.9);
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     transition: all 0.2s ease;
     color: #444;
+    text-align: center;
 }
 
 .tab-btn.active {
@@ -75,7 +77,7 @@ h1 {
 /* 內容面板 (毛玻璃效果) */
 .content-card {
     width: 100%;
-    max-width: 600px;
+    max-width: 650px;
     background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(10px);
     border-radius: 20px;
@@ -137,20 +139,89 @@ ul {
     margin: 10px 0;
     font-size: 13px;
 }
+
+/* 計分器專用樣式 */
+.calculator-section {
+    margin-bottom: 20px;
+}
+
+.checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.7);
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    font-size: 13px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.checkbox-item input {
+    margin-right: 6px;
+    transform: scale(1.1);
+    cursor: pointer;
+}
+
+.score-result-box {
+    background: #eff6ff;
+    border: 2px solid #3b82f6;
+    border-radius: 14px;
+    padding: 15px;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.score-result-box h3 {
+    color: #1e3a8a;
+    margin-top: 0;
+    margin-bottom: 8px;
+}
+
+.score-number {
+    font-size: 32px;
+    font-weight: bold;
+    color: #2563eb;
+}
+
+.score-detail {
+    font-size: 13px;
+    color: #475569;
+    margin-top: 5px;
+}
+
+.reset-score-btn {
+    margin-top: 10px;
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+}
 </style>
 </head>
 <body>
 
 <header>
     <h1>🇹🇼 台灣寶島：內閣你哪位？</h1>
-    <p class="subtitle">新手快速指引手冊</p>
+    <p class="subtitle">新手快速指引與計分小幫手</p>
 </header>
 
-<!-- 切換按鈕 -->
+<!-- 切換按鈕 (包含計分器) -->
 <div class="nav-buttons">
     <button class="tab-btn active" onclick="switchTab('tab1', this)">🏛️ 回合行動</button>
     <button class="tab-btn" onclick="switchTab('tab2', this)">⚖️ 遊戲規則</button>
-    <button class="tab-btn" onclick="switchTab('tab3', this)">⭐ 分數計算</button>
+    <button class="tab-btn" onclick="switchTab('tab3', this)">⭐ 分數說明</button>
+    <button class="tab-btn" onclick="switchTab('tab4', this)">🧮 分數計算機</button>
 </div>
 
 <!-- 頁面 1：回合行動 -->
@@ -206,14 +277,14 @@ ul {
     <p>隨時可不耗 AP，用 <span class="highlight">3 個任意資源</span> 兌換 <span class="highlight">1 個指定資源</span>。</p>
 </div>
 
-<!-- 頁面 3：分數計算 -->
+<!-- 頁面 3：分數說明 -->
 <div id="tab3" class="content-card" style="display:none;">
-    <h2>🏆 遊戲結算與計分</h2>
+    <h2>🏆 遊戲結算與計分說明</h2>
     
     <ul>
         <li>🏷️ <b>地標卡基本分數</b>：顯示於地標卡左上方數字。</li>
-        <li>🔗 <b>連動加分</b>：身份卡右上方標籤 vs 地標卡右上方標籤（現代建設、自然風景、歷史古蹟、美食小吃）。<br>
-            遊戲結束時，若標籤相符可獲得額外加分：<br>
+        <li>🔗 <b>連動加分</b>：身份卡標籤 vs 地標卡標籤（現代建設、自然風景、歷史古蹟、美食小吃）。<br>
+            遊戲結束時，若持有之身分卡標籤與地標卡標籤相同，可獲得額外連動加分：<br>
             <span class="highlight">每一張「現代建設」 +2 分</span><br>
             <span class="highlight">其餘標籤各 +1 分</span>
         </li>
@@ -221,20 +292,174 @@ ul {
     </ul>
 </div>
 
+<!-- 頁面 4：分數計算機 -->
+<div id="tab4" class="content-card" style="display:none;">
+    <h2>🧮 遊戲結算計算機</h2>
+    <p style="font-size: 13px; color: #666; margin-bottom: 15px;">請勾選你結算時持有的「地標卡」與「身分牌」，系統將自動計算總分與標籤連動加分！</p>
+
+    <!-- 地標卡選擇區 -->
+    <div class="calculator-section">
+        <h3>🏛️ 持有的地標卡</h3>
+        <div id="landmarkContainer" class="checkbox-grid"></div>
+    </div>
+
+    <!-- 身分牌選擇區 -->
+    <div class="calculator-section">
+        <h3>🎭 結算時持有的身分牌</h3>
+        <div id="identityContainer" class="checkbox-grid"></div>
+    </div>
+
+    <!-- 結算結果顯示 -->
+    <div class="score-result-box">
+        <h3>總得分</h3>
+        <div class="score-number" id="totalScore">0 分</div>
+        <div class="score-detail" id="scoreDetail">地標基本分: 0 | 標籤連動加分: 0</div>
+        <button class="reset-score-btn" onclick="resetCalculator()">清除勾選</button>
+    </div>
+</div>
+
 <script>
+// 資料陣列
+const landmarks = [
+    {name: "台中高美濕地", score: 3, tag: "自然風景"},
+    {name: "太魯閣國家公園", score: 1, tag: "自然風景"},
+    {name: "阿里山神木", score: 1, tag: "自然風景"},
+    {name: "南投日月潭", score: 2, tag: "自然風景"},
+    {name: "澎湖雙心石滬", score: 2, tag: "自然風景"},
+    {name: "台東三仙台", score: 1, tag: "自然風景"},
+    {name: "野柳女王頭", score: 0, tag: "自然風景"},
+    {name: "花蓮清水斷崖", score: 0, tag: "自然風景"},
+    {name: "擎天崗", score: 1, tag: "自然風景"},
+    {name: "合歡山武嶺", score: 4, tag: "自然風景"},
+    {name: "旗山老街", score: 4, tag: "美食小吃"},
+    {name: "逢甲夜市", score: 5, tag: "美食小吃"},
+    {name: "廟口夜市", score: 3, tag: "美食小吃"},
+    {name: "平溪天燈", score: 2, tag: "美食小吃"},
+    {name: "淡水老街", score: 5, tag: "美食小吃"},
+    {name: "九份老街", score: 7, tag: "美食小吃"},
+    {name: "羅東夜市", score: 4, tag: "美食小吃"},
+    {name: "饒河夜市", score: 5, tag: "美食小吃"},
+    {name: "鹿港老街", score: 5, tag: "美食小吃"},
+    {name: "台南花園夜市", score: 3, tag: "美食小吃"},
+    {name: "淡江大橋", score: 10, tag: "現代建設"},
+    {name: "台北101", score: 14, tag: "現代建設"},
+    {name: "桃園國際機場", score: 9, tag: "現代建設"},
+    {name: "高雄港", score: 6, tag: "現代建設"},
+    {name: "雲林西螺大橋", score: 5, tag: "現代建設"},
+    {name: "新竹科學園區", score: 8, tag: "現代建設"},
+    {name: "綠島燈塔", score: 7, tag: "現代建設"},
+    {name: "台中國家歌劇院", score: 4, tag: "現代建設"},
+    {name: "屏東鵝鑾鼻燈塔", score: 5, tag: "現代建設"},
+    {name: "新北市美術館", score: 4, tag: "現代建設"},
+    {name: "連江媽祖巨神像", score: 2, tag: "歷史古蹟"},
+    {name: "彰化八卦山大佛", score: 1, tag: "歷史古蹟"},
+    {name: "苗栗龍騰斷橋", score: 5, tag: "歷史古蹟"},
+    {name: "台南安平古堡", score: 2, tag: "歷史古蹟"},
+    {name: "金門莒光樓", score: 0, tag: "歷史古蹟"},
+    {name: "宜蘭蘭陽博物館", score: 4, tag: "歷史古蹟"},
+    {name: "金門風獅爺", score: 0, tag: "歷史古蹟"},
+    {name: "中正紀念堂", score: 8, tag: "歷史古蹟"},
+    {name: "故宮博物院", score: 5, tag: "歷史古蹟"},
+    {name: "蘭嶼拼板舟", score: 2, tag: "歷史古蹟"}
+];
+
+const identities = [
+    {name: "金雞部", tag: "現代建設"},
+    {name: "勞洞部", tag: "自然風景"},
+    {name: "農YA部", tag: "美食小吃"},
+    {name: "數喂發展部", tag: "現代建設"},
+    {name: "內症部", tag: "自然風景"},
+    {name: "環淨部", tag: "歷史古蹟"},
+    {name: "財掙部", tag: "無標籤"},
+    {name: "蕉通部", tag: "美食小吃"},
+    {name: "狗防部", tag: "自然風景"},
+    {name: "教鬱部", tag: "歷史古蹟"},
+    {name: "外驕部", tag: "無標籤"},
+    {name: "衛生浮力部", tag: "美食小吃"},
+    {name: "法霧部", tag: "歷史古蹟"},
+    {name: "蚊化部", tag: "現代建設"}
+];
+
+// 初始化產生勾選選單
+function initCalculator() {
+    const lmContainer = document.getElementById("landmarkContainer");
+    landmarks.forEach((item, index) => {
+        let label = document.createElement("label");
+        label.className = "checkbox-item";
+        label.innerHTML = `<input type="checkbox" value="${index}" onchange="calculateScore()"> ${item.name} (${item.score}分)`;
+        lmContainer.appendChild(label);
+    });
+
+    const idContainer = document.getElementById("identityContainer");
+    identities.forEach((item, index) => {
+        let label = document.createElement("label");
+        label.className = "checkbox-item";
+        label.innerHTML = `<input type="checkbox" value="${index}" onchange="calculateScore()"> ${item.name}`;
+        idContainer.appendChild(label);
+    });
+}
+
+// 計算分數邏輯
+function calculateScore() {
+    let totalLandmarkScore = 0;
+    
+    // 統計身分牌擁有的各標籤數量
+    let identityTags = {};
+    const idCheckboxes = document.querySelectorAll("#identityContainer input:checked");
+    idCheckboxes.forEach(cb => {
+        let tag = identities[cb.value].tag;
+        if(tag !== "無標籤") {
+            identityTags[tag] = (identityTags[tag] || 0) + 1;
+        }
+    });
+
+    let synergyBonus = 0;
+
+    // 計算地標基礎分與連動加分
+    const lmCheckboxes = document.querySelectorAll("#landmarkContainer input:checked");
+    lmCheckboxes.forEach(cb => {
+        let lm = landmarks[cb.value];
+        totalLandmarkScore += lm.score;
+
+        // 檢查該地標標籤是否與手上的身分牌標籤對應
+        if (identityTags[lm.tag] && identityTags[lm.tag] > 0) {
+            if (lm.tag === "現代建設") {
+                synergyBonus += 2; // 現代建設 +2 分
+            } else {
+                synergyBonus += 1; // 其餘標籤各 +1 分
+            }
+        }
+    });
+
+    let grandTotal = totalLandmarkScore + synergyBonus;
+
+    // 更新畫面顯示
+    document.getElementById("totalScore").textContent = grandTotal + " 分";
+    document.getElementById("scoreDetail").textContent = `地標基本分: ${totalLandmarkScore} | 標籤連動加分: ${synergyBonus}`;
+}
+
+// 清除所有勾選
+function resetCalculator() {
+    document.querySelectorAll(".calculator-section input[type='checkbox']").forEach(cb => cb.checked = false);
+    calculateScore();
+}
+
+// 切換分頁
 function switchTab(tabId, btn) {
-    // 隱藏所有內容卡片
     const cards = document.querySelectorAll('.content-card');
     cards.forEach(card => card.style.display = 'none');
 
-    // 移除所有按鈕的 active 狀態
     const buttons = document.querySelectorAll('.tab-btn');
     buttons.forEach(button => button.classList.remove('active'));
 
-    // 顯示點擊的卡片並點亮按鈕
     document.getElementById(tabId).style.display = 'block';
     btn.classList.add('active');
 }
+
+// 頁面載入後初始化計分器
+window.onload = function() {
+    initCalculator();
+};
 </script>
 
 </body>
