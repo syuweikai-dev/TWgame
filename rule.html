@@ -250,7 +250,7 @@ ul {
     <button class="tab-btn active" onclick="switchTab('tab1', this)">🏛️ 回合行動</button>
     <button class="tab-btn" onclick="switchTab('tab2', this)">⚖️ 遊戲規則</button>
     <button class="tab-btn" onclick="switchTab('tab3', this)">⭐ 分數說明</button>
-    <button class="tab-btn" onclick="switchTab('tab4', this)">🧮 Combo 計分器</button>
+    <button class="tab-btn" onclick="switchTab('tab4', this)">🧮 分數計算器</button>
 </div>
 
 <div id="tab1" class="content-card active">
@@ -288,12 +288,12 @@ ul {
     <ul>
         <li>🏷️ <b>地標基本分</b>：左上數字。</li>
         <li>🔗 <b>標籤連動加分</b>：<span class="highlight">現代建設 +2 分</span>，其餘標籤各 +1 分。</li>
-        <li>⚡ <b>Combo 技能加分</b>：夜市、雙塔、燈塔、複製技能與 101 加倍的精密連動計算！</li>
+        <li>⚡ <b>地標卡技能加分</b>：地標卡被動技能連動獲得額外分數</li>
     </ul>
 </div>
 
 <div id="tab4" class="content-card" style="display:none;">
-    <h2>🧮 進階 Combo 結算計算機</h2>
+    <h2>🧮 結算計算機</h2>
     <p style="font-size: 13px; color: #666; margin-bottom: 15px;">勾選地標與身分牌，並設定專屬 Combo 效果與複製選項：</p>
 
     <div class="calculator-section">
@@ -601,8 +601,25 @@ function calculateScore() {
         let idx = el.index;
         let currentCardScore = lm.score;
 
+        // 金門雙塔本尊基本分升級 (0分 -> 5分)
         if (lm.name === "金門莒光樓" && hasFengshiye) currentCardScore = 5;
         if (lm.name === "金門風獅爺" && hasGuguan) currentCardScore = 5;
+
+        // 蘭嶼拼板舟（古蹟複製卡）基本分與連動修正
+        if (lm.isHistoricCopyCard) {
+            let sel = document.getElementById("copy_historic_" + idx);
+            if (sel) {
+                let copiedName = sel.value;
+                // 如果複製了風獅爺，且場上有莒光樓
+                if (copiedName === "金門風獅爺" && hasGuguan) {
+                    currentCardScore = 5; // 總價值直接變 5 分（不再疊加原本的 2 分）
+                }
+                // 如果複製了莒光樓，且場上有風獅爺
+                if (copiedName === "金門莒光樓" && hasFengshiye) {
+                    currentCardScore = 5; // 總價值直接變 5 分
+                }
+            }
+        }
 
         baseScore += currentCardScore;
 
