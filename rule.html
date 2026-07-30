@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>台灣寶島：內閣你哪位？快速指南與計分器</title>
+<title>台灣寶島：內閣你哪位？快速指南與進階計分器</title>
 <style>
 *{
     box-sizing: border-box;
@@ -42,7 +42,6 @@ h1 {
     color: #555;
 }
 
-/* 按鈕導覽列 (改為 4 個按鈕自動分配) */
 .nav-buttons {
     display: flex;
     flex-wrap: wrap;
@@ -74,7 +73,6 @@ h1 {
     box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
 }
 
-/* 內容面板 (毛玻璃效果) */
 .content-card {
     width: 100%;
     max-width: 650px;
@@ -140,7 +138,6 @@ ul {
     font-size: 13px;
 }
 
-/* 計分器專用樣式 */
 .calculator-section {
     margin-bottom: 20px;
 }
@@ -154,8 +151,8 @@ ul {
 
 .checkbox-item {
     display: flex;
-    align-items: center;
-    background: rgba(255, 255, 255, 0.7);
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.8);
     padding: 8px 10px;
     border-radius: 8px;
     border: 1px solid #cbd5e1;
@@ -164,10 +161,34 @@ ul {
     user-select: none;
 }
 
+.checkbox-main {
+    display: flex;
+    align-items: center;
+}
+
 .checkbox-item input {
     margin-right: 6px;
     transform: scale(1.1);
     cursor: pointer;
+}
+
+/* 特殊卡片微調控制區 */
+.combo-control {
+    margin-top: 6px;
+    padding-top: 4px;
+    border-top: 1px dashed #cbd5e1;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #1e3a8a;
+}
+
+.combo-control input, .combo-control select {
+    padding: 2px 4px;
+    font-size: 11px;
+    border-radius: 4px;
+    border: 1px solid #94a3b8;
 }
 
 .score-result-box {
@@ -195,6 +216,7 @@ ul {
     font-size: 13px;
     color: #475569;
     margin-top: 5px;
+    line-height: 1.4;
 }
 
 .reset-score-btn {
@@ -213,115 +235,89 @@ ul {
 
 <header>
     <h1>🇹🇼 台灣寶島：內閣你哪位？</h1>
-    <p class="subtitle">新手快速指引與計分小幫手</p>
+    <p class="subtitle">新手快速指引與 Combo 計分計算機</p>
 </header>
 
-<!-- 切換按鈕 (包含計分器) -->
 <div class="nav-buttons">
     <button class="tab-btn active" onclick="switchTab('tab1', this)">🏛️ 回合行動</button>
     <button class="tab-btn" onclick="switchTab('tab2', this)">⚖️ 遊戲規則</button>
     <button class="tab-btn" onclick="switchTab('tab3', this)">⭐ 分數說明</button>
-    <button class="tab-btn" onclick="switchTab('tab4', this)">🧮 分數計算機</button>
+    <button class="tab-btn" onclick="switchTab('tab4', this)">🧮 Combo 計分器</button>
 </div>
 
 <!-- 頁面 1：回合行動 -->
 <div id="tab1" class="content-card active">
     <h2>⏱️ 玩家回合流程</h2>
-    
     <h3>階段 1：基礎產出資源</h3>
     <ul>
         <li>從中央銀行自由選擇拿取：<span class="highlight">1 個人力</span> 或 <span class="highlight">1 個食物</span>。</li>
     </ul>
-
     <h3>階段 2：宣告身分、佔領與保留地標</h3>
     <p>獲得 <span class="highlight">2 點行動點 (AP)</span>，可執行以下行動：</p>
     <ul>
-        <li>🎭 <b>宣告身分 (1 AP)</b>：口頭宣稱自己擁有某個身分，並執行該身分主動效果（例：宣告金雞部拿1能源）。當回合不可重複宣告相同身分，需承擔被質疑風險。</li>
-        <li>🏛️ <b>佔領地標 (1 AP)</b>：選中央公開市場地標卡，支付資源（如 4能源+4人力+2食物），獲得立即技能或永久被動技能。</li>
-        <li>📦 <b>保留地標 (1 AP)</b>：選中央公開市場地標卡覆蓋在自己面前（限1張），僅自己能買；若遊戲結束未買，將扣除該地標基礎分數！</li>
-        <li>🔍 <b>審查身分 (1 AP)</b>：宣告並猜測對手手上的<span class="highlight">兩張或以上身分牌</span>，迫使對手公開身分並強制換牌。若全部猜中，可額外獲得懸賞區內的 3 個任意資源。<br><span style="color: #b91c1c; font-size: 13px;">⚠️ 註記：若對手只有一張身分牌，則無法使用此行動。</span></li>
+        <li>🎭 <b>宣告身分 (1 AP)</b>：口頭宣稱身分並執行主動效果。</li>
+        <li>🏛️ <b>佔領地標 (1 AP)</b>：選中央公開市場地標卡，支付資源獲得技能。</li>
+        <li>📦 <b>保留地標 (1 AP)</b>：選市場地標卡覆蓋在自己面前（限1張），僅自己能買；未買遊戲結束扣除基礎分。</li>
+        <li>🔍 <b>審查身分 (1 AP)</b>：猜測對手手上的<span class="highlight">兩張或以上身分牌</span>。全猜中獲懸賞區 3 個任意資源。<br><span style="color: #b91c1c; font-size: 13px;">⚠️ 註記：若對手只有一張身分牌，則無法使用此行動。</span></li>
     </ul>
-
     <h3>階段 3：回合結束</h3>
     <ul>
-        <li>📦 檢查手中資源總數（能源+人力+食物）。若超過 10 個，必須自由選擇丟回銀行，直到<span class="highlight">剛好留下 10 個</span>，換下一個玩家。</li>
+        <li>📦 檢查手中資源總數（能源+人力+食物）。若超過 10 個須丟回銀行直到<span class="highlight">剛好 10 個</span>。</li>
     </ul>
 </div>
 
 <!-- 頁面 2：遊戲規則 -->
 <div id="tab2" class="content-card" style="display:none;">
     <h2>⚖️ 核心機制與互動</h2>
-    
     <h3>💰 懸賞機制</h3>
-    <p>玩家在自己回合宣告身分，觸發主動技能並成功從銀行或其他玩家拿取資源時，銀行會同步放 1 份完全相同的資源到懸賞區。（註：發動被動技能或干擾對手時，不會增加懸賞區資源）。</p>
-    <p>當有玩家審查你的身份並如果全部猜中，可從懸賞區內獲得 3 個任意資源。</p>
-    <div class="tip-box">
-        🔥 <b>發大財技巧</b>：若連續兩次宣告身分成功未被抓包，可翻牌證明說謊，清空並拿走懸賞區所有資源，隨後手牌洗回牌庫重抽（超過10顆資源須棄至10顆）。
-    </div>
-
+    <p>回合宣告身分成功拿資源時，銀行同步放 1 份相同資源到懸賞區。審查對手成功全部猜中也可獲 3 個懸賞資源。</p>
+    <div class="tip-box">🔥 連續兩次宣告身分成功未被抓包，可翻牌證明說謊，清空並拿走懸賞區所有資源，手牌重洗抽牌。</div>
     <h3>🗣️ 質疑機制</h3>
-    <p>當有人宣告身分執行技能時，任何人可隨時喊 <b>「你哪位！」</b> 提出質疑：</p>
+    <p>任何人可隨時喊 <b>「你哪位！」</b> 質疑：</p>
     <ul>
-        <li>❌ <b>情況 A：被質疑者「在說謊」</b><br>行動失效。質疑者拿 1 個懸賞區資源，說謊者受懲罰。</li>
-        <li>⭕ <b>情況 B：被質疑者「沒說謊」</b><br>翻牌自清，行動成功！該牌洗回牌庫並重抽一張新身分牌，質疑方受懲罰。</li>
+        <li>❌ <b>說謊</b>：行動失效，質疑者拿 1 個懸賞資源，說謊者受懲罰。</li>
+        <li>⭕ <b>沒說謊</b>：翻牌自清行動成功！該牌洗回並重抽，質疑方受懲罰。</li>
     </ul>
-    <p><b>⚠️ 懲罰內容</b>：失敗者將 1 張身分牌棄至牌庫並洗勻；且<span class="highlight">下一回合行動點 (AP) 降為 1 點</span>。若無身分牌則無法質疑。</p>
-
-    <h3>🃏 補齊身分牌</h3>
-    <ul>
-        <li><b>缺少 1 張</b>：拿基礎資源，僅能用 1 AP，回合結束後從牌庫補齊 1 張。</li>
-        <li><b>無身分牌</b>：拿基礎資源，<span class="highlight">回合直接結束</span>，從牌庫補齊 2 張。</li>
-    </ul>
-
-    <h3>🔄 資源自由兌換</h3>
-    <p>隨時可不耗 AP，用 <span class="highlight">3 個任意資源</span> 兌換 <span class="highlight">1 個指定資源</span>。</p>
+    <p><b>⚠️ 懲罰</b>：失敗者將 1 張身分牌洗回牌庫；<span class="highlight">下一回合 AP 降為 1 點</span>。</p>
 </div>
 
 <!-- 頁面 3：分數說明 -->
 <div id="tab3" class="content-card" style="display:none;">
     <h2>🏆 遊戲結算與計分說明</h2>
-    
     <ul>
-        <li>🏷️ <b>地標卡基本分數</b>：顯示於地標卡左上方數字。</li>
-        <li>🔗 <b>連動加分</b>：身份卡標籤 vs 地標卡標籤（現代建設、自然風景、歷史古蹟、美食小吃）。<br>
-            遊戲結束時，若持有之身分卡標籤與地標卡標籤相同，可獲得額外連動加分：<br>
-            <span class="highlight">每一張「現代建設」 +2 分</span><br>
-            <span class="highlight">其餘標籤各 +1 分</span>
-        </li>
-        <li>⚡ <b>地標卡特殊技能</b>：依地標卡文字解說（例：饒河夜市、綠島燈塔等特殊效果）。</li>
+        <li>🏷️ <b>地標基本分</b>：左上數字。</li>
+        <li>🔗 <b>標籤連動加分</b>：若身分卡標籤與地標卡相符：<span class="highlight">現代建設 +2 分</span>，其餘各 +1 分。</li>
+        <li>⚡ <b>Combo 技能加分</b>：如日月潭、饒河夜市、高美濕地等特殊被動或複製技能連動加減分！</li>
     </ul>
 </div>
 
 <!-- 頁面 4：分數計算機 -->
 <div id="tab4" class="content-card" style="display:none;">
-    <h2>🧮 遊戲結算計算機</h2>
-    <p style="font-size: 13px; color: #666; margin-bottom: 15px;">請勾選你結算時持有的「地標卡」與「身分牌」，系統將自動計算總分與標籤連動加分！</p>
+    <h2>🧮 進階 Combo 結算計算機</h2>
+    <p style="font-size: 13px; color: #666; margin-bottom: 15px;">勾選你持有的地標與身分牌，並調整特殊 Combo 參數，系統將自動計算總分！</p>
 
-    <!-- 地標卡選擇區 -->
     <div class="calculator-section">
-        <h3>🏛️ 持有的地標卡</h3>
+        <h3>🏛️ 持有的地標卡 (含 Combo 調整)</h3>
         <div id="landmarkContainer" class="checkbox-grid"></div>
     </div>
 
-    <!-- 身分牌選擇區 -->
     <div class="calculator-section">
         <h3>🎭 結算時持有的身分牌</h3>
         <div id="identityContainer" class="checkbox-grid"></div>
     </div>
 
-    <!-- 結算結果顯示 -->
     <div class="score-result-box">
         <h3>總得分</h3>
         <div class="score-number" id="totalScore">0 分</div>
-        <div class="score-detail" id="scoreDetail">地標基本分: 0 | 標籤連動加分: 0</div>
-        <button class="reset-score-btn" onclick="resetCalculator()">清除勾選</button>
+        <div class="score-detail" id="scoreDetail">基本分: 0 | 標籤連動: 0 | Combo加減分: 0</div>
+        <button class="reset-score-btn" onclick="resetCalculator()">重置計算機</button>
     </div>
 </div>
 
 <script>
-// 資料陣列
+// 完整地標資料
 const landmarks = [
-    {name: "台中高美濕地", score: 3, tag: "自然風景"},
+    {name: "台中高美濕地", score: 3, tag: "自然風景", hasWorkerInput: true},
     {name: "太魯閣國家公園", score: 1, tag: "自然風景"},
     {name: "阿里山神木", score: 1, tag: "自然風景"},
     {name: "南投日月潭", score: 2, tag: "自然風景"},
@@ -333,7 +329,7 @@ const landmarks = [
     {name: "合歡山武嶺", score: 4, tag: "自然風景"},
     {name: "旗山老街", score: 4, tag: "美食小吃"},
     {name: "逢甲夜市", score: 5, tag: "美食小吃"},
-    {name: "廟口夜市", score: 3, tag: "美食小吃"},
+    {name: "廟口夜市", score: 3, tag: "美食小吃", isCopyCard: true},
     {name: "平溪天燈", score: 2, tag: "美食小吃"},
     {name: "淡水老街", score: 5, tag: "美食小吃"},
     {name: "九份老街", score: 7, tag: "美食小吃"},
@@ -342,7 +338,7 @@ const landmarks = [
     {name: "鹿港老街", score: 5, tag: "美食小吃"},
     {name: "台南花園夜市", score: 3, tag: "美食小吃"},
     {name: "淡江大橋", score: 10, tag: "現代建設"},
-    {name: "台北101", score: 14, tag: "現代建設"},
+    {name: "台北101", score: 14, tag: "現代建設", isDoubleCard: true},
     {name: "桃園國際機場", score: 9, tag: "現代建設"},
     {name: "高雄港", score: 6, tag: "現代建設"},
     {name: "雲林西螺大橋", score: 5, tag: "現代建設"},
@@ -350,7 +346,7 @@ const landmarks = [
     {name: "綠島燈塔", score: 7, tag: "現代建設"},
     {name: "台中國家歌劇院", score: 4, tag: "現代建設"},
     {name: "屏東鵝鑾鼻燈塔", score: 5, tag: "現代建設"},
-    {name: "新北市美術館", score: 4, tag: "現代建設"},
+    {name: "新北市美術館", score: 4, tag: "現代建設", isCopyCard: true},
     {name: "連江媽祖巨神像", score: 2, tag: "歷史古蹟"},
     {name: "彰化八卦山大佛", score: 1, tag: "歷史古蹟"},
     {name: "苗栗龍騰斷橋", score: 5, tag: "歷史古蹟"},
@@ -360,7 +356,7 @@ const landmarks = [
     {name: "金門風獅爺", score: 0, tag: "歷史古蹟"},
     {name: "中正紀念堂", score: 8, tag: "歷史古蹟"},
     {name: "故宮博物院", score: 5, tag: "歷史古蹟"},
-    {name: "蘭嶼拼板舟", score: 2, tag: "歷史古蹟"}
+    {name: "蘭嶼拼板舟", score: 2, tag: "歷史古蹟", isCopyCard: true}
 ];
 
 const identities = [
@@ -380,13 +376,34 @@ const identities = [
     {name: "蚊化部", tag: "現代建設"}
 ];
 
-// 初始化產生勾選選單
 function initCalculator() {
     const lmContainer = document.getElementById("landmarkContainer");
     landmarks.forEach((item, index) => {
         let label = document.createElement("label");
         label.className = "checkbox-item";
-        label.innerHTML = `<input type="checkbox" value="${index}" onchange="calculateScore()"> ${item.name} (${item.score}分)`;
+        
+        let extraHtml = "";
+        // 高美濕地：人力堆疊輸入框
+        if (item.hasWorkerInput) {
+            extraHtml += `<div class="combo-control" onclick="event.stopPropagation()"><span>人力:</span><input type="number" id="worker_${index}" value="0" min="0" style="width:35px;" onchange="calculateScore()"></div>`;
+        }
+        // 台北101：基礎分數加倍選項
+        if (item.isDoubleCard) {
+            extraHtml += `<div class="combo-control" onclick="event.stopPropagation()"><span>分數加倍:</span><input type="checkbox" id="double_${index}" onchange="calculateScore()"></div>`;
+        }
+        // 廟口、新北美術館、蘭嶼拼板舟：複製技能下拉選單
+        if (item.isCopyCard) {
+            let targetType = item.name.includes("廟口") ? "美食小吃" : (item.name.includes("美術館") ? "現代建設" : "歷史古蹟");
+            extraHtml += `<div class="combo-control" onclick="event.stopPropagation()"><span>複製(${targetType}):</span><select id="copy_${index}" onchange="calculateScore()"><option value="0">無複製</option><option value="2">+2分效果</option><option value="3">+3分效果</option><option value="5">+5分效果</option></select></div>`;
+        }
+
+        label.innerHTML = `
+            <div class="checkbox-main">
+                <input type="checkbox" value="${index}" onchange="toggleCardControls(${index}); calculateScore();"> 
+                <span>${item.name} (${item.score}分)</span>
+            </div>
+            ${extraHtml}
+        `;
         lmContainer.appendChild(label);
     });
 
@@ -394,16 +411,26 @@ function initCalculator() {
     identities.forEach((item, index) => {
         let label = document.createElement("label");
         label.className = "checkbox-item";
-        label.innerHTML = `<input type="checkbox" value="${index}" onchange="calculateScore()"> ${item.name}`;
+        label.innerHTML = `
+            <div class="checkbox-main">
+                <input type="checkbox" value="${index}" onchange="calculateScore()"> 
+                <span>${item.name}</span>
+            </div>
+        `;
         idContainer.appendChild(label);
     });
 }
 
-// 計算分數邏輯
+function toggleCardControls(index) {
+    // 預留互動切換邏輯
+}
+
 function calculateScore() {
-    let totalLandmarkScore = 0;
-    
-    // 統計身分牌擁有的各標籤數量
+    let baseScore = 0;
+    let synergyBonus = 0;
+    let comboBonus = 0;
+
+    // 統計身分牌標籤
     let identityTags = {};
     const idCheckboxes = document.querySelectorAll("#identityContainer input:checked");
     idCheckboxes.forEach(cb => {
@@ -413,38 +440,110 @@ function calculateScore() {
         }
     });
 
-    let synergyBonus = 0;
-
-    // 計算地標基礎分與連動加分
+    // 取得所有勾選的地標
     const lmCheckboxes = document.querySelectorAll("#landmarkContainer input:checked");
-    lmCheckboxes.forEach(cb => {
-        let lm = landmarks[cb.value];
-        totalLandmarkScore += lm.score;
+    let checkedLandmarks = Array.from(lmCheckboxes).map(cb => landmarks[cb.value]);
+    let checkedIndices = Array.from(lmCheckboxes).map(cb => parseInt(cb.value));
 
-        // 檢查該地標標籤是否與手上的身分牌標籤對應
+    // 計算各類型地標張數（用於 Combo 判斷）
+    let totalLandmarksCount = checkedLandmarks.length;
+    let natureCount = checkedLandmarks.filter(l => l.tag === "自然風景").length;
+    let historicCount = checkedLandmarks.filter(l => l.tag === "歷史古蹟").length;
+    let nightMarketCount = checkedLandmarks.filter(l => ["逢甲夜市", "廟口夜市", "羅東夜市", "台南花園夜市", "饒河夜市"].includes(l.name)).length;
+    let modernCount = checkedLandmarks.filter(l => l.tag === "現代建設").length;
+    let hasGuguan = checkedLandmarks.some(l => l.name === "金門莒光樓");
+    let hasFengshiye = checkedLandmarks.some(l => l.name === "金門風獅爺");
+    let hasLongtan = checkedLandmarks.some(l => l.name === "屏東鵝鑾鼻燈塔");
+    let hasGreenLight = checkedLandmarks.some(l => l.name === "綠島燈塔");
+
+    lmCheckboxes.forEach(cb => {
+        let idx = parseInt(cb.value);
+        let lm = landmarks[idx];
+        let currentCardScore = lm.score;
+
+        // 1. 台北101 加倍機制
+        if (lm.isDoubleCard) {
+            let isDouble = document.getElementById(`double_${idx}`).checked;
+            if (isDouble) currentCardScore *= 2;
+        }
+
+        // 2. 金門雙塔特殊分數覆蓋
+        if (lm.name === "金門莒光樓" && hasFengshiye) {
+            currentCardScore = 5; //
+        }
+        if (lm.name === "金門風獅爺" && hasGuguan) {
+            currentCardScore = 5; //
+        }
+
+        baseScore += currentCardScore;
+
+        // 3. 高美濕地人力加分
+        if (lm.hasWorkerInput) {
+            let workers = parseInt(document.getElementById(`worker_${idx}`).value) || 0;
+            comboBonus += workers * 1; // 每1個人力獲得1分
+        }
+
+        // 4. 複製技能卡額外加分
+        if (lm.isCopyCard) {
+            let copyVal = parseInt(document.getElementById(`copy_${idx}`).value) || 0;
+            comboBonus += copyVal;
+        }
+
+        // 5. 標籤連動加分
         if (identityTags[lm.tag] && identityTags[lm.tag] > 0) {
             if (lm.tag === "現代建設") {
-                synergyBonus += 2; // 現代建設 +2 分
+                synergyBonus += 2;
             } else {
-                synergyBonus += 1; // 其餘標籤各 +1 分
+                synergyBonus += 1;
             }
         }
     });
 
-    let grandTotal = totalLandmarkScore + synergyBonus;
+    // 6. 其他地標 Combo 被動效果計算
+    checkedLandmarks.forEach(lm => {
+        // 南投日月潭：若有其他自然風景/戶外牌，1張額外獲得2分
+        if (lm.name === "南投日月潭") {
+            let otherNature = natureCount - 1;
+            if (otherNature > 0) comboBonus += otherNature * 2; //
+        }
 
-    // 更新畫面顯示
+        // 九份老街：若有其他歷史古蹟地標卡，1張扣除1分
+        if (lm.name === "九份老街") {
+            let otherHistoric = historicCount - 1;
+            if (otherHistoric > 0) comboBonus -= otherHistoric * 1; //
+        }
+
+        // 饒河夜市：若有其他夜市牌，1張額外獲得2分
+        if (lm.name === "饒河夜市") {
+            let otherNightMarkets = nightMarketCount - 1;
+            if (otherNightMarkets > 0) comboBonus += otherNightMarkets * 2; //
+        }
+
+        // 桃園國際機場：若有其他現代建設/建設，1張額外獲得3分
+        if (lm.name === "桃園國際機場") {
+            let otherModern = modernCount - 1;
+            if (otherModern > 0) comboBonus += otherModern * 3; //
+        }
+
+        // 綠島燈塔：若有「屏東鵝鑾鼻燈塔」，此卡額外獲得 2 分
+        if (lm.name === "綠島燈塔" && hasLongtan) {
+            comboBonus += 2; //
+        }
+    });
+
+    let grandTotal = baseScore + synergyBonus + comboBonus;
+
     document.getElementById("totalScore").textContent = grandTotal + " 分";
-    document.getElementById("scoreDetail").textContent = `地標基本分: ${totalLandmarkScore} | 標籤連動加分: ${synergyBonus}`;
+    document.getElementById("scoreDetail").textContent = `地標基本分: ${baseScore} | 標籤連動: ${synergyBonus} | Combo加減分: ${comboBonus}`;
 }
 
-// 清除所有勾選
 function resetCalculator() {
     document.querySelectorAll(".calculator-section input[type='checkbox']").forEach(cb => cb.checked = false);
+    document.querySelectorAll(".calculator-section input[type='number']").forEach(input => input.value = 0);
+    document.querySelectorAll(".calculator-section select").forEach(sel => sel.value = 0);
     calculateScore();
 }
 
-// 切換分頁
 function switchTab(tabId, btn) {
     const cards = document.querySelectorAll('.content-card');
     cards.forEach(card => card.style.display = 'none');
@@ -456,7 +555,6 @@ function switchTab(tabId, btn) {
     btn.classList.add('active');
 }
 
-// 頁面載入後初始化計分器
 window.onload = function() {
     initCalculator();
 };
