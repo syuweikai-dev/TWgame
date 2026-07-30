@@ -676,15 +676,18 @@ function calculateScore() {
         }
     });
 
-    // 正確的夜市被動計算邏輯：
+// 核心夜市被動精準計算：
     // 每有一張具備「饒河技能（本尊或被複製）」的夜市牌，
-    // 它的技能就是：「計算場上除了自己以外，其他 A、B、C、D 夜市牌的數量，每張讓該夜市 +2 分」
+    // 它會去掃描場上「除了自己以外」還有多少張其他的夜市牌，有幾張就貢獻幾張 * 2 分。
+    // 如果半張其他夜市都沒有（例如場上只有 A 複製 E 自己一張），則貢獻 0 分！
     nightMarketListWithSource.forEach(function(market) {
         if (market.hasPassive) {
+            // 找出除了這張卡自己以外，場上還有多少張其他的夜市牌
             let otherMarkets = nightMarketListWithSource.filter(function(m) {
                 return m.cardIndex !== market.cardIndex;
             });
             
+            // 只有當「其他夜市牌的數量 > 0」時，才會產生加分
             if (otherMarkets.length > 0) {
                 comboBonus += otherMarkets.length * 2;
             }
