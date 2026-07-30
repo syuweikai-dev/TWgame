@@ -582,19 +582,19 @@ function calculateScore() {
     let hasFengshiye = effectiveLandmarks.some(function(el) { return el.item.name === "金門風獅爺"; });
     let hasLongtan = effectiveLandmarks.some(function(el) { return el.item.name === "屏東鵝鑾鼻燈塔"; });
 
-    // 夜市加分牌清單
+    // 夜市加分牌清單與數量統計（改用陣列以支援同名夜市獨立累加張數）
     let targetNightMarketNames = ["廟口夜市", "逢甲夜市", "羅東夜市", "台南花園夜市", "饒河夜市"];
-    let activeNightMarketNamesSet = new Set();
+    let activeNightMarketList = [];
 
     effectiveLandmarks.forEach(function(el) {
         if (targetNightMarketNames.includes(el.item.name)) {
-            activeNightMarketNamesSet.add(el.item.name);
+            activeNightMarketList.push(el.item.name);
         }
         if (el.item.isFoodCopyCard) {
             let sel = document.getElementById("copy_food_" + el.index);
             if (sel && sel.value !== "-1") {
                 if (targetNightMarketNames.includes(sel.value)) {
-                    activeNightMarketNamesSet.add(sel.value);
+                    activeNightMarketList.push(sel.value);
                 }
             }
         }
@@ -686,28 +686,14 @@ function calculateScore() {
         if (lm.isFoodCopyCard) {
             let sel = document.getElementById("copy_food_" + idx);
             if (sel && sel.value !== "-1") {
-                activeNightMarketNamesSet.add(sel.value);
+                activeNightMarketList.push(sel.value);
             }
         }
     });
 
-    // 夜市總被動計算
-    let hasRealRahe = effectiveLandmarks.some(function(el) { return el.item.name === "饒河夜市"; });
-    let hasMiaokouCopyRahe = false;
-    effectiveLandmarks.forEach(function(el) {
-        if (el.item.name === "廟口夜市") {
-            let sel = document.getElementById("copy_food_" + el.index);
-            if (sel && sel.value === "饒河夜市") {
-                hasMiaokouCopyRahe = true;
-            }
-        }
-    });
-
-    if (hasRealRahe || hasMiaokouCopyRahe) {
-        let totalNightMarkets = Array.from(activeNightMarketNamesSet).length;
-        if (totalNightMarkets > 1) {
-            comboBonus += (totalNightMarkets - 1) * 2;
-        }
+    // 夜市總被動計算：只要夜市總張數 > 1，每多 1 張就 +2 分（支援真實饒河 + 廟口複製饒河的疊加計分）
+    if (activeNightMarketList.length > 1) {
+        comboBonus += (activeNightMarketList.length - 1) * 2;
     }
 
     // 保留地標扣分計算
