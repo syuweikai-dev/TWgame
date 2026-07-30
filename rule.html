@@ -372,49 +372,53 @@ function initCalculator() {
     landmarks.forEach((item, index) => {
         let label = document.createElement("label");
         label.className = "checkbox-item";
-        label.id = `label_lm_${index}`;
+        label.id = "label_lm_" + index;
         
         let extraHtml = "";
         
-        // 高美濕地人力
         if (item.hasWorkerInput) {
-            extraHtml += `<div class="combo-control" onclick="event.stopPropagation()"><span>人力:</span><input type="number" id="worker_${index}" value="0" min="0" style="width:40px;" onchange="calculateScore()"></div>`;
+            extraHtml += '<div class="combo-control" onclick="event.stopPropagation()"><span>人力:</span><input type="number" id="worker_' + index + '" value="0" min="0" style="width:40px;" onchange="calculateScore()"></div>';
         }
         
-        // 廟口夜市：美食小吃複製下拉選單
         if (item.isFoodCopyCard) {
-            let foodItems = landmarks.filter(l => l.tag === "美食小吃");
-            let options = `<option value="-1">不複製</option>` + foodItems.map(f => `<option value="${f.name}">${f.name}</option>`).join('');
-            extraHtml += `<div class="combo-control" onclick="event.stopPropagation()"><span>複製夜市:</span><select id="copy_food_${index}" onchange="calculateScore()">${options}</select></div>`;
+            let foodItems = landmarks.filter(function(l) { return l.tag === "美食小吃"; });
+            let options = '<option value="-1">不複製</option>';
+            for (let i = 0; i < foodItems.length; i++) {
+                options += '<option value="' + foodItems[i].name + '">' + foodItems[i].name + '</option>';
+            }
+            extraHtml += '<div class="combo-control" onclick="event.stopPropagation()"><span>複製夜市:</span><select id="copy_food_' + index + '" onchange="calculateScore()">' + options + '</select></div>';
         }
 
-        // 台北101：全地標加倍選擇
         if (item.isDoubleSelector) {
-            let options = `<option value="-1">無加倍</option>` + landmarks.map((l, idx) => `<option value="${idx}">${l.name}(${l.score}分)</option>`).join('');
-            extraHtml += `<div class="combo-control" onclick="event.stopPropagation()"><span>101加倍:</span><select id="double_target_${index}" onchange="handle101Select(${index}); calculateScore()">${options}</select></div>`;
+            let options = '<option value="-1">無加倍</option>';
+            for (let i = 0; i < landmarks.length; i++) {
+                options += '<option value="' + i + '">' + landmarks[i].name + '(' + landmarks[i].score + '分)</option>';
+            }
+            extraHtml += '<div class="combo-control" onclick="event.stopPropagation()"><span>101加倍:</span><select id="double_target_' + index + '" onchange="handle101Select(' + index + '); calculateScore()">' + options + '</select></div>';
         }
 
-        // 新北市美術館：現代建設複製
         if (item.isModernCopyCard) {
-            let modernItems = landmarks.filter(l => l.tag === "現代建設");
-            let options = `<option value="-1">不複製</option>` + modernItems.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
-            extraHtml += `<div class="combo-control" onclick="event.stopPropagation()"><span>複製現代:</span><select id="copy_modern_${index}" onchange="calculateScore()">${options}</select></div>`;
+            let modernItems = landmarks.filter(function(l) { return l.tag === "現代建設"; });
+            let options = '<option value="-1">不複製</option>';
+            for (let i = 0; i < modernItems.length; i++) {
+                options += '<option value="' + modernItems[i].name + '">' + modernItems[i].name + '</option>';
+            }
+            extraHtml += '<div class="combo-control" onclick="event.stopPropagation()"><span>複製現代:</span><select id="copy_modern_' + index + '" onchange="calculateScore()">' + options + '</select></div>';
         }
 
-        // 蘭嶼拼板舟：歷史古蹟複製
         if (item.isHistoricCopyCard) {
-            let historicItems = landmarks.filter(l => l.tag === "歷史古蹟");
-            let options = `<option value="-1">不複製</option>` + historicItems.map(h => `<option value="${h.name}">${h.name}</option>`).join('');
-            extraHtml += `<div class="combo-control" onclick="event.stopPropagation()"><span>複製古蹟:</span><select id="copy_historic_${index}" onchange="calculateScore()">${options}</select></div>`;
+            let historicItems = landmarks.filter(function(l) { return l.tag === "歷史古蹟"; });
+            let options = '<option value="-1">不複製</option>';
+            for (let i = 0; i < historicItems.length; i++) {
+                options += '<option value="' + historicItems[i].name + '">' + historicItems[i].name + '</option>';
+            }
+            extraHtml += '<div class="combo-control" onclick="event.stopPropagation()"><span>複製古蹟:</span><select id="copy_historic_' + index + '" onchange="calculateScore()">' + options + '</select></div>';
         }
 
-        label.innerHTML = `
-            <div class="checkbox-main">
-                <input type="checkbox" id="chk_lm_${index}" value="${index}" onchange="handleLandmarkCheck(${index}); calculateScore();"> 
-                <span>${item.name} (${item.score}分)</span>
-            </div>
-            ${extraHtml}
-        `;
+        label.innerHTML = '<div class="checkbox-main">' +
+            '<input type="checkbox" id="chk_lm_' + index + '" value="' + index + '" onchange="handleLandmarkCheck(' + index + '); calculateScore();">' +
+            '<span>' + item.name + ' (' + item.score + '分)</span>' +
+            '</div>' + extraHtml;
         lmContainer.appendChild(label);
     });
 
@@ -422,45 +426,38 @@ function initCalculator() {
     identities.forEach((item, index) => {
         let label = document.createElement("label");
         label.className = "checkbox-item";
-        label.innerHTML = `
-            <div class="checkbox-main">
-                <input type="checkbox" value="${index}" onchange="calculateScore()"> 
-                <span>${item.name}</span>
-            </div>
-        `;
+        label.innerHTML = '<div class="checkbox-main">' +
+            '<input type="checkbox" value="' + index + '" onchange="calculateScore()">' +
+            '<span>' + item.name + '</span>' +
+            '</div>';
         idContainer.appendChild(label);
     });
 }
 
-// 處理台北101連動：若選中某地標加倍，該地標必須被取消勾選且鎖定
-function handle101Select(101Index) {
-    let selectElem = document.getElementById(`double_target_${101Index}`);
+function handle101Select(target101Index) {
+    let selectElem = document.getElementById("double_target_" + target101Index);
     let targetIdx = parseInt(selectElem.value);
     
-    // 如果重新選擇，先恢復所有地標的勾選可用性
-    landmarks.forEach((_, idx) => {
-        let chk = document.getElementById(`chk_lm_${idx}`);
+    landmarks.forEach(function(_, idx) {
+        let chk = document.getElementById("chk_lm_" + idx);
         if(chk) chk.disabled = false;
     });
 
-    // 如果有選中特定加倍地標
     if (targetIdx !== -1) {
-        let targetChk = document.getElementById(`chk_lm_${targetIdx}`);
+        let targetChk = document.getElementById("chk_lm_" + targetIdx);
         if (targetChk) {
-            targetChk.checked = false; // 強制取消勾選
-            targetChk.disabled = true; // 鎖定不能勾選
+            targetChk.checked = false;
+            targetChk.disabled = true;
         }
     }
 }
 
-// 處理一般地標勾選時，若被 101 指定加倍則無法勾選
 function handleLandmarkCheck(index) {
-    // 檢查是否有 101 正好選了這個地標作加倍
-    landmarks.forEach((item, idx) => {
+    landmarks.forEach(function(item, idx) {
         if (item.isDoubleSelector) {
-            let sel = document.getElementById(`double_target_${idx}`);
+            let sel = document.getElementById("double_target_" + idx);
             if (sel && parseInt(sel.value) === index) {
-                let chk = document.getElementById(`chk_lm_${index}`);
+                let chk = document.getElementById("chk_lm_" + index);
                 if (chk) chk.checked = false;
                 alert("此地標已被台北101選擇加倍，無法直接獨立勾選計分！");
             }
@@ -473,10 +470,9 @@ function calculateScore() {
     let synergyBonus = 0;
     let comboBonus = 0;
 
-    // 統計身分牌標籤
     let identityTags = {};
     const idCheckboxes = document.querySelectorAll("#identityContainer input:checked");
-    idCheckboxes.forEach(cb => {
+    idCheckboxes.forEach(function(cb) {
         let tag = identities[cb.value].tag;
         if(tag !== "無標籤") {
             identityTags[tag] = (identityTags[tag] || 0) + 1;
@@ -484,30 +480,25 @@ function calculateScore() {
     });
 
     const lmCheckboxes = document.querySelectorAll("#landmarkContainer input:checked");
-    let checkedLandmarks = Array.from(lmCheckboxes).map(cb => landmarks[cb.value]);
+    let checkedLandmarks = Array.from(lmCheckboxes).map(function(cb) { return landmarks[cb.value]; });
 
-    let natureCount = checkedLandmarks.filter(l => l.tag === "自然風景").length;
-    let historicCount = checkedLandmarks.filter(l => l.tag === "歷史古蹟").length;
-    let modernCount = checkedLandmarks.filter(l => l.tag === "現代建設").length;
-    let hasGuguan = checkedLandmarks.some(l => l.name === "金門莒光樓");
-    let hasFengshiye = checkedLandmarks.some(l => l.name === "金門風獅爺");
-    let hasLongtan = checkedLandmarks.some(l => l.name === "屏東鵝鑾鼻燈塔");
+    let natureCount = checkedLandmarks.filter(function(l) { return l.tag === "自然風景"; }).length;
+    let historicCount = checkedLandmarks.filter(function(l) { return l.tag === "歷史古蹟"; }).length;
+    let modernCount = checkedLandmarks.filter(function(l) { return l.tag === "現代建設"; }).length;
+    let hasGuguan = checkedLandmarks.some(function(l) { return l.name === "金門莒光樓"; });
+    let hasFengshiye = checkedLandmarks.some(function(l) { return l.name === "金門風獅爺"; });
+    let hasLongtan = checkedLandmarks.some(function(l) { return l.name === "屏東鵝鑾鼻燈塔"; });
 
-    // 收集所有被視為持有的夜市清單（包含勾選的夜市 + 廟口夜市複製的夜市）
-    let activeNightMarkets = checkedLandmarks.filter(l => ["旗山老街", "逢甲夜市", "廟口夜市", "平溪天燈", "淡水老街", "九份老街", "羅東夜市", "饒河夜市", "鹿港老街", "台南花園夜市"].includes(l.name)).map(l => l.name);
+    let nightMarketNames = ["旗山老街", "逢甲夜市", "廟口夜市", "平溪天燈", "淡水老街", "九份老街", "羅東夜市", "饒河夜市", "鹿港老街", "台南花園夜市"];
+    let activeNightMarkets = checkedLandmarks.filter(function(l) { return nightMarketNames.includes(l.name); }).map(function(l) { return l.name; });
 
-    // 檢查廟口夜市複製
-    landmarks.forEach((lm, idx) => {
+    landmarks.forEach(function(lm, idx) {
         if (lm.name === "廟口夜市") {
-            let chk = document.getElementById(`chk_lm_${idx}`);
+            let chk = document.getElementById("chk_lm_" + idx);
             if (chk && chk.checked) {
-                let sel = document.getElementById(`copy_food_${idx}`);
+                let sel = document.getElementById("copy_food_" + idx);
                 if (sel && sel.value !== "-1") {
                     activeNightMarkets.push(sel.value);
-                    if (sel.value === "饒河夜市") {
-                        // 如果廟口複製了饒河夜市，額外獲得夜市 Combo 效果
-                        // 後續統一計算
-                    }
                 }
             }
         }
@@ -515,17 +506,15 @@ function calculateScore() {
 
     let nightMarketCount = new Set(activeNightMarkets).size;
 
-    // 計算各個地標得分
-    landmarks.forEach((lm, idx) => {
-        let chk = document.getElementById(`chk_lm_${idx}`);
+    landmarks.forEach(function(lm, idx) {
+        let chk = document.getElementById("chk_lm_" + idx);
         let isChecked = chk && chk.checked;
 
-        // 如果是 101 指定加倍的目標地標（雖然沒勾選，但要計算加倍分進 101 內）
         let isDoubleTarget = false;
-        landmarks.forEach((parentLm, pIdx) => {
+        landmarks.forEach(function(parentLm, pIdx) {
             if (parentLm.isDoubleSelector) {
-                let sel = document.getElementById(`double_target_${pIdx}`);
-                let pChk = document.getElementById(`chk_lm_${pIdx}`);
+                let sel = document.getElementById("double_target_" + pIdx);
+                let pChk = document.getElementById("chk_lm_" + pIdx);
                 if (pChk && pChk.checked && sel && parseInt(sel.value) === idx) {
                     isDoubleTarget = true;
                 }
@@ -536,37 +525,32 @@ function calculateScore() {
 
         let currentCardScore = lm.score;
 
-        // 金門雙塔特殊分數覆蓋
         if (lm.name === "金門莒光樓" && hasFengshiye) currentCardScore = 5;
         if (lm.name === "金門風獅爺" && hasGuguan) currentCardScore = 5;
 
-        // 台北101加倍處理
         if (lm.isDoubleSelector && isChecked) {
-            let sel = document.getElementById(`double_target_${idx}`);
+            let sel = document.getElementById("double_target_" + idx);
             let targetIdx = parseInt(sel.value);
             if (targetIdx !== -1) {
                 let targetLm = landmarks[targetIdx];
                 let targetScore = targetLm.score;
-                // 處理被加倍目標如果是雙塔的覆蓋分
                 if (targetLm.name === "金門莒光樓" && hasFengshiye) targetScore = 5;
                 if (targetLm.name === "金門風獅爺" && hasGuguan) targetScore = 5;
                 
-                comboBonus += targetScore; // 多加一次該地標的分數達成「加倍」效果
+                comboBonus += targetScore;
             }
         }
 
         if (isChecked) {
             baseScore += currentCardScore;
 
-            // 高美濕地人力
             if (lm.hasWorkerInput) {
-                let workers = parseInt(document.getElementById(`worker_${idx}`).value) || 0;
+                let workers = parseInt(document.getElementById("worker_" + idx).value) || 0;
                 comboBonus += workers * 1;
             }
 
-            // 新北市美術館複製 (只有 綠島燈塔 或 桃園國際機場 有額外 Combo)
             if (lm.isModernCopyCard) {
-                let sel = document.getElementById(`copy_modern_${idx}`);
+                let sel = document.getElementById("copy_modern_" + idx);
                 if (sel) {
                     let copiedName = sel.value;
                     if (copiedName === "桃園國際機場") {
@@ -579,20 +563,18 @@ function calculateScore() {
                 }
             }
 
-            // 蘭嶼拼板舟複製 (只有 金門莒光樓、金門風獅爺 有效)
             if (lm.isHistoricCopyCard) {
-                let sel = document.getElementById(`copy_historic_${idx}`);
+                let sel = document.getElementById("copy_historic_" + idx);
                 if (sel) {
                     let copiedName = sel.value;
                     if (copiedName === "金門莒光樓" || copiedName === "金門風獅爺") {
                         if (hasGuguan && hasFengshiye) {
-                            comboBonus += 5; // 模擬雙塔 Combo 加分
+                            comboBonus += 5;
                         }
                     }
                 }
             }
 
-            // 標籤連動加分
             if (identityTags[lm.tag] && identityTags[lm.tag] > 0) {
                 if (lm.tag === "現代建設") {
                     synergyBonus += 2;
@@ -603,8 +585,7 @@ function calculateScore() {
         }
     });
 
-    // 勾選地標的被動 Combo 計算
-    checkedLandmarks.forEach(lm => {
+    checkedLandmarks.forEach(function(lm) {
         if (lm.name === "南投日月潭") {
             let otherNature = natureCount - 1;
             if (otherNature > 0) comboBonus += otherNature * 2;
@@ -613,8 +594,7 @@ function calculateScore() {
             let otherHistoric = historicCount - 1;
             if (otherHistoric > 0) comboBonus -= otherHistoric * 1;
         }
-        if (lm.name === "饒河夜市" || (activeNightMarkets.includes("饒河夜市"))) {
-            // 如果自身是饒河夜市，或透過廟口複製了饒河夜市效果
+        if (lm.name === "饒河夜市" || activeNightMarkets.includes("饒河夜市")) {
             let otherNightMarkets = nightMarketCount - 1;
             if (otherNightMarkets > 0) comboBonus += otherNightMarkets * 2;
         }
@@ -630,24 +610,24 @@ function calculateScore() {
     let grandTotal = baseScore + synergyBonus + comboBonus;
 
     document.getElementById("totalScore").textContent = grandTotal + " 分";
-    document.getElementById("scoreDetail").textContent = `地標基本分: ${baseScore} | 標籤連動: ${synergyBonus} | Combo加減分: ${comboBonus}`;
+    document.getElementById("scoreDetail").textContent = "地標基本分: " + baseScore + " | 標籤連動: " + synergyBonus + " | Combo加減分: " + comboBonus;
 }
 
 function resetCalculator() {
-    document.querySelectorAll(".calculator-section input[type='checkbox']").forEach(cb => {
+    document.querySelectorAll(".calculator-section input[type='checkbox']").forEach(function(cb) {
         cb.checked = false;
         cb.disabled = false;
     });
-    document.querySelectorAll(".calculator-section input[type='number']").forEach(input => input.value = 0);
-    document.querySelectorAll(".calculator-section select").forEach(sel => sel.value = sel.options[0].value);
+    document.querySelectorAll(".calculator-section input[type='number']").forEach(function(input) { input.value = 0; });
+    document.querySelectorAll(".calculator-section select").forEach(function(sel) { sel.value = sel.options[0].value; });
     calculateScore();
 }
 
 function switchTab(tabId, btn) {
     const cards = document.querySelectorAll('.content-card');
-    cards.forEach(card => card.style.display = 'none');
+    cards.forEach(function(card) { card.style.display = 'none'; });
     const buttons = document.querySelectorAll('.tab-btn');
-    buttons.forEach(button => button.classList.remove('active'));
+    buttons.forEach(function(button) { button.classList.remove('active'); });
     document.getElementById(tabId).style.display = 'block';
     btn.classList.add('active');
 }
