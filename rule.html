@@ -417,11 +417,9 @@ function initCalculator() {
         if (item.isDoubleSelector) {
             let options = '<option value="-1">無加倍</option>';
             for (let i = 0; i < landmarks.length; i++) {
-                // a. 101加倍內的選單敘述 還原成原本的數字（非加倍後數字）
                 options += '<option value="' + i + '">' + landmarks[i].name + ' (' + landmarks[i].score + '分)</option>';
             }
-            // b. 選擇後會連動強制勾選該地標，且 101 本身改為固定 +3 分供平衡
-            extraHtml += '<div class="combo-control" onclick="event.stopPropagation()"><span>101加倍:</span><select id="double_target_' + index + '" onchange="handle101Selection(' + index + '); calculateScore()">' + options + '</select></div>';
+            extraHtml += '<div class="combo-control" onclick="event.stopPropagation()"><span>101加倍:</span><select id="double_target_' + index + '" onchange="handle101Selection(); calculateScore()">' + options + '</select></div>';
         }
 
         if (item.isModernCopyCard) {
@@ -443,7 +441,7 @@ function initCalculator() {
         }
 
         label.innerHTML = '<div class="checkbox-main">' +
-            '<input type="checkbox" id="chk_lm_' + index + '" value="' + index + '" onchange="calculateScore();">' +
+            '<input type="checkbox" id="chk_lm_' + index + '" value="' + index + '" onchange="handleLandmarkCheckboxChange(' + index + '); calculateScore();">' +
             '<span>' + item.name + ' (' + item.score + '分)</span>' +
             '</div>' + extraHtml;
         lmContainer.appendChild(label);
@@ -477,15 +475,33 @@ function toggleReservedDropdown() {
     }
 }
 
-// b. 當 101 下拉選單選擇時，自動幫玩家強制勾選該地標
-function handle101Selection(index101) {
-    let sel = document.getElementById("double_target_" + index101);
-    let targetIdx = parseInt(sel.value);
-    if (targetIdx !== -1) {
-        let targetChk = document.getElementById("chk_lm_" + targetIdx);
-        if (targetChk) {
-            targetChk.checked = true;
+// 當 101 下拉選單選擇時，自動幫玩家強制勾選該地標
+function handle101Selection() {
+    landmarks.forEach(function(item, idx) {
+        if (item.isDoubleSelector) {
+            let chk = document.getElementById("chk_lm_" + idx);
+            let sel = document.getElementById("double_target_" + idx);
+            if (chk && chk.checked && sel && parseInt(sel.value) !== -1) {
+                let targetIdx = parseInt(sel.value);
+                let targetChk = document.getElementById("chk_lm_" + targetIdx);
+                if (targetChk) targetChk.checked = true;
+            }
         }
+    });
+}
+
+// 當手動取消某個地標勾選時，若有 101 正好以它為加倍目標，則自動將該 101 的選單歸零，避免單向卡住
+function handleLandmarkCheckboxChange(index) {
+    let chk = document.getElementById("chk_lm_" + index);
+    if (!chk.checked) {
+        landmarks.forEach(function(item, idx) {
+            if (item.isDoubleSelector) {
+                let sel = document.getElementById("double_target_" + idx);
+                if (sel && parseInt(sel.value) === index) {
+                    sel.value = "-1";
+                }
+            }
+        });
     }
 }
 
@@ -504,9 +520,22 @@ function calculateScore() {
         }
     });
 
-    // 收集所有被手動勾選或被強制勾選的地標
+    // 檢查 101 是否取消勾選：若取消勾選，連動的加倍地標選單也必須自動清除並釋放
+    landmarks.forEach(function(item, idx) {
+        if (item.isDoubleSelector) {
+            let chk = document.getElementById("chk_lm_" + idx);
+            if (chk && !chk.checked) {
+                let sel = document.getElementById("double_target_" + idx);
+                if (sel) sel.value = "-1";
+            }
+        }
+    });
+
+    // 執行一次自動勾選連動檢查
+    handle101Selection();
+
+    // 收集所有被勾選的地標
     let effectiveLandmarks = [];
-    
     landmarks.forEach(function(item, idx) {
         let chk = document.getElementById("chk_lm_" + idx);
         if (chk && chk.checked) {
@@ -555,11 +584,16 @@ function calculateScore() {
 
         baseScore += currentCardScore;
 
-        // c. 台北101本身的特殊處理：如果勾選了 101，且下拉有指定加倍目標，則 101 卡本身單純 +3 分補足差額
+        // 台北101加倍處理：精準加上被選中地標的「原本基礎分數」，完美對應雙倍計分
         if (lm.isDoubleSelector) {
             let sel = document.getElementById("double_target_" + idx);
             if (sel && parseInt(sel.value) !== -1) {
-                comboBonus += 3;
+                let targetIdx = parseInt(sel.value);
+                let targetLm = landmarks[targetIdx];
+                let targetBaseScore = targetLm.score;
+                if (targetLm.name === "金門莒光樓" && hasFengshiye) targetBaseScore = 5;
+                if (targetLm.name === "金門風獅爺" && hasGuguan) targetBaseScore = 5;
+                comboBonus += targetBaseScore;
             }
         }
 
