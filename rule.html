@@ -606,20 +606,7 @@ function calculateScore() {
         if (lm.name === "金門風獅爺" && hasGuguan) currentCardScore = 5;
 
         // 蘭嶼拼板舟（古蹟複製卡）基本分與連動修正
-        if (lm.isHistoricCopyCard) {
-            let sel = document.getElementById("copy_historic_" + idx);
-            if (sel) {
-                let copiedName = sel.value;
-                // 如果複製了風獅爺，且場上有莒光樓
-                if (copiedName === "金門風獅爺" && hasGuguan) {
-                    currentCardScore = 5; // 總價值直接變 5 分（不再疊加原本的 2 分）
-                }
-                // 如果複製了莒光樓，且場上有風獅爺
-                if (copiedName === "金門莒光樓" && hasFengshiye) {
-                    currentCardScore = 5; // 總價值直接變 5 分
-                }
-            }
-        }
+      
 
         baseScore += currentCardScore;
 
@@ -682,18 +669,16 @@ function calculateScore() {
             }
         }
 
-        // 蘭嶼拼板舟（複製古蹟卡）自身因複製技能獲得的加分
+        // 蘭嶼拼板舟（複製古蹟卡）自身因複製技能獲得的 Combo 加分（補上差額 3 分，讓總分 2 變 5）
         if (lm.isHistoricCopyCard) {
             let sel = document.getElementById("copy_historic_" + idx);
             if (sel) {
                 let copiedName = sel.value;
-                // 如果複製了莒光樓，且場上有風獅爺
                 if (copiedName === "金門莒光樓" && hasFengshiye) {
-                    comboBonus += 5; // 自己獲得 +5 分！
+                    comboBonus += 3; 
                 }
-                // 如果複製了風獅爺，且場上有莒光樓
                 if (copiedName === "金門風獅爺" && hasGuguan) {
-                    comboBonus += 5; // 自己獲得 +5 分！
+                    comboBonus += 3; 
                 }
             }
         }
