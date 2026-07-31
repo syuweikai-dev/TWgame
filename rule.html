@@ -339,8 +339,8 @@ ul {
         💡 <b>基本規則說明</b>：
         <ul style="margin-top: 5px; margin-bottom: 0;">
             <li><b>2人局</b>：隨機從 4 大標籤核心中洗牌挑出 4 個身分。</li>
-            <li><b>3-4人局</b>：4 個核心身分外，額外從剩下 10 個身分隨機抽 1 個加入。</li>
-            <li><b>5人局</b>：4 個核心身分外，額外從剩下 10 個身分隨機抽 2 個加入。</li>
+            <li><b>3-4人局</b>：4 個核心身分外，額外從剩下未被選中的身分中隨機抽 1 個加入（絕不重複）。</li>
+            <li><b>5人局</b>：4 個核心身分外，額外從剩下未被選中的身分中隨機抽 2 個加入（絕不重複）。</li>
         </ul>
     </div>
 
@@ -517,7 +517,7 @@ const landmarks = [
 
 const identities = [
     {name: "金雞部", tag: "現代建設"},
-    {name: "勞洞部", tag: "自然風景"},  //防偽 Noah設計
+    {name: "勞洞部", tag: "自然風景"},  //noah製作
     {name: "農YA部", tag: "美食小吃"},
     {name: "數喂發展部", tag: "現代建設"},
     {name: "內症部", tag: "自然風景"},
@@ -583,16 +583,20 @@ const landmarkSkills = {
     }
 };
 
-// 基礎核心身分與備用身分庫設定
+// 基礎核心身分與完整身分庫設定
 const coreIdentitiesPool = [
     [{name: "金雞部", tag: "現代建設"}, {name: "勞洞部", tag: "自然風景"}, {name: "農YA部", tag: "美食小吃"}, {name: "環淨部", tag: "歷史古蹟"}],
     [{name: "蚊化部", tag: "現代建設"}, {name: "內症部", tag: "自然風景"}, {name: "衛生浮力部", tag: "美食小吃"}, {name: "教鬱部", tag: "歷史古蹟"}],
     [{name: "數喂發展部", tag: "現代建設"}, {name: "狗防部", tag: "自然風景"}, {name: "蕉通部", tag: "美食小吃"}, {name: "法霧部", tag: "歷史古蹟"}]
 ];
 
-const poolIdentities = [
+const allIdentities = [
+    {name: "金雞部", tag: "現代建設"},
+    {name: "勞洞部", tag: "自然風景"},
+    {name: "農YA部", tag: "美食小吃"},
     {name: "數喂發展部", tag: "現代建設"},
     {name: "內症部", tag: "自然風景"},
+    {name: "環淨部", tag: "歷史古蹟"},
     {name: "財掙部", tag: "無標籤"},
     {name: "蕉通部", tag: "美食小吃"},
     {name: "狗防部", tag: "自然風景"},
@@ -600,26 +604,26 @@ const poolIdentities = [
     {name: "外驕部", tag: "無標籤"},
     {name: "衛生浮力部", tag: "美食小吃"},
     {name: "法霧部", tag: "歷史古蹟"},
-    {name: "蚊化部", tag: "現代建設"},
-    {name: "財掙部", tag: "無標籤"},
-    {name: "外驕部", tag: "無標籤"}
+    {name: "蚊化部", tag: "現代建設"}
 ];
 
 function generateGameSetup() {
     let playerCount = document.getElementById("setupPlayerCount").value;
     
-    // 隨機挑選一套核心身分組合 (確保涵蓋四大標籤但每次洗牌不同)
+    // 隨機挑選一套核心身分組合
     let shuffledCores = [...coreIdentitiesPool].sort(() => Math.random() - 0.5);
     let selectedSet = [...shuffledCores[0]];
     
-    let poolCopy = [...poolIdentities];
-    poolCopy.sort(() => Math.random() - 0.5);
+    // 找出尚未被選入核心組合的剩餘身分作為補充池（確保絕對不重複）
+    let coreNames = selectedSet.map(item => item.name);
+    let remainingPool = allIdentities.filter(item => !coreNames.includes(item.name));
+    remainingPool.sort(() => Math.random() - 0.5);
     
     if (playerCount === "3-4") {
-        selectedSet.push(poolCopy[0]);
+        selectedSet.push(remainingPool[0]);
     } else if (playerCount === "5") {
-        selectedSet.push(poolCopy[0]);
-        selectedSet.push(poolCopy[1]);
+        selectedSet.push(remainingPool[0]);
+        selectedSet.push(remainingPool[1]);
     }
     
     let resultBox = document.getElementById("setupResultBox");
