@@ -53,11 +53,11 @@ h1 {
 
 .tab-btn {
     flex: 1;
-    min-width: 130px;
-    padding: 12px 8px;
+    min-width: 110px;
+    padding: 12px 6px;
     border: none;
     border-radius: 12px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: bold;
     cursor: pointer;
     background: rgba(255, 255, 255, 0.9);
@@ -237,6 +237,61 @@ ul {
     padding: 12px;
     margin-top: 15px;
 }
+
+/* 技能介紹頁面專屬樣式 */
+.skill-select-container {
+    margin-bottom: 15px;
+}
+
+.skill-select-container select {
+    width: 100%;
+    padding: 10px;
+    font-size: 15px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    color: #1e3a8a;
+    font-weight: bold;
+}
+
+.skill-card-display {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 10px;
+}
+
+.skill-type-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.tag-immediate { background: #fee2e2; color: #991b1b; }
+.tag-passive { background: #e0f2fe; color: #0369a1; }
+
+.skill-desc-text {
+    font-size: 14px;
+    font-weight: bold;
+    color: #0f766e;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed #cbd5e1;
+}
+
+.skill-note-box {
+    background: #fffbeb;
+    border-left: 4px solid #f59e0b;
+    padding: 10px;
+    border-radius: 0 8px 8px 0;
+    font-size: 13px;
+    color: #b45309;
+    line-height: 1.5;
+}
 </style>
 </head>
 <body>
@@ -249,8 +304,9 @@ ul {
 <div class="nav-buttons">
     <button class="tab-btn active" onclick="switchTab('tab1', this)">🏛️ 回合行動</button>
     <button class="tab-btn" onclick="switchTab('tab2', this)">⚖️ 遊戲規則</button>
-    <button class="tab-btn" onclick="switchTab('tab3', this)">⭐ 分數說明</button>
-    <button class="tab-btn" onclick="switchTab('tab4', this)">🧮 分數計算器</button>
+    <button class="tab-btn" onclick="switchTab('tab3', this)">💡 地標卡技能</button>
+    <button class="tab-btn" onclick="switchTab('tab4', this)">⭐ 分數說明</button>
+    <button class="tab-btn" onclick="switchTab('tab5', this)">🧮 分數計算器</button>
 </div>
 
 <div id="tab1" class="content-card active">
@@ -273,7 +329,7 @@ ul {
     <h2>⚖️ 核心機制與互動</h2>
     <h3>💰 懸賞機制</h3>
     <p>在自己回合宣告身分，觸發主動技能並成功從銀行或其他玩家拿取資源時，銀行會同步放 1 份完全相同的資源到懸賞區。審查對手全猜中可拿 3 個懸賞區資源。</p>
-    <div class="tip-box">🔥 連續兩次宣告成功未被抓包可翻開身份牌牌證明自己剛剛都在說謊，清空並拿走懸賞區所有資源。</div>
+    <div class="tip-box">🔥 連續兩次宣告成功未被抓包可翻開身份牌證明自己剛剛都在說謊，清空並拿走懸賞區所有資源。</div>
     
     <h3>🗣️ 質疑機制</h3>
     <p>喊 <b>「你哪位！」</b> 質疑：</p>
@@ -284,7 +340,7 @@ ul {
     <p><b>⚠️ 懲罰</b>：失敗者將 1 張身分牌洗回；<span class="highlight">下一回合 AP 降為 1 點</span>。</p>
 
     <h3>🔄 補齊身分牌</h3>
-    <p>當你因懲罰或效果導致手中缺少或無身分牌時：</p>
+    <p>當你因懲罰或效果導致缺少或無身分牌時：</p>
     <ul>
         <li><b>缺少 1 張身分牌</b>：拿取基礎產出資源，並<span class="highlight">僅能使用 1 點行動點 (AP)</span>。回合結束時，從身分牌庫抽取 1 張補齊。</li>
         <li><b>無身分牌時</b>：拿取基礎產出資源，<span class="highlight">回合直接結束</span>，並從身分牌庫直接抽取 2 張補齊身分牌。</li>
@@ -296,7 +352,34 @@ ul {
     </ul>
 </div>
 
+<!-- 新增：地標卡技能介紹分頁 -->
 <div id="tab3" class="content-card" style="display:none;">
+    <h2>💡 特殊地標卡技能與規則註記</h2>
+    <p style="font-size: 13px; color: #666; margin-bottom: 15px;">選擇你想查詢的地標卡，查看詳細技能效果與互動註記：</p>
+    
+    <div class="skill-select-container">
+        <select id="skillSelect" onchange="displayLandmarkSkill()">
+            <option value="penghu">澎湖雙心石滬</option>
+            <option value="queen">野柳女王頭</option>
+            <option value="qingtian">擎天崗</option>
+            <option value="miao">廟口夜市</option>
+            <option value="hsinchu">新竹科學園區</option>
+            <option value="taichung">台中國家歌劇院</option>
+            <option value="taipei_art">新北市美術館</option>
+            <option value="lanyu">蘭嶼拼板舟</option>
+        </select>
+    </div>
+
+    <div class="skill-card-display">
+        <div id="skillTypeTag" class="skill-type-tag tag-immediate">立即效果</div>
+        <div id="skillDescText" class="skill-desc-text">指定一位玩家互換兩張身份牌。</div>
+        <div class="skill-note-box" id="skillNoteText">
+            自己與另一位玩家互換身份牌，當有一方身份牌只有一張，僅能互換一張。此牌在某些情況能發揮出強大的作用 (笑)
+        </div>
+    </div>
+</div>
+
+<div id="tab4" class="content-card" style="display:none;">
     <h2>🏆 遊戲結算與計分說明</h2>
     <ul>
         <li>🏷️ <b>地標基本分</b>：左上數字。</li>
@@ -305,7 +388,7 @@ ul {
     </ul>
 </div>
 
-<div id="tab4" class="content-card" style="display:none;">
+<div id="tab5" class="content-card" style="display:none;">
     <h2>🧮 結算計算機</h2>
     <p style="font-size: 13px; color: #666; margin-bottom: 15px;">勾選地標與身分牌，並設定專屬 Combo 效果與複製選項：</p>
 
@@ -402,6 +485,71 @@ const identities = [
     {name: "法霧部", tag: "歷史古蹟"},
     {name: "蚊化部", tag: "現代建設"}
 ];
+
+// 地標技能資料庫
+const landmarkSkills = {
+    penghu: {
+        type: "立即效果",
+        typeClass: "tag-immediate",
+        desc: "指定一位玩家互換兩張身份牌。",
+        note: "自己與另一位玩家互換身份牌，當有一方身份牌只有一張，僅能互換一張。此牌在某些情況能發揮出強大的作用 (笑)"
+    },
+    queen: {
+        type: "立即效果",
+        typeClass: "tag-immediate",
+        desc: "可轉移此地標卡給指定一位玩家。",
+        note: "居然轉移這個地標給其他玩家？資源不是白花了嗎？這張卡在某些情況可以阻斷對手的節奏（慎用）。"
+    },
+    qingtian: {
+        type: "被動效果",
+        typeClass: "tag-passive",
+        desc: "當自己的身份牌翻開或被檢視時，可獲得 1 個人力。",
+        note: "哇～被看光了！不論你在任何時候被翻開或是秘密檢視身份牌，你都能獲得 1 個人力，而且是一張牌 1 個人力。"
+    },
+    miao: {
+        type: "立即效果",
+        typeClass: "tag-immediate",
+        desc: "複製場上已佔領任一美食小吃地標卡的技能。<br><span style='font-size:12px; color:#e11d48;'>#複製地標僅能複製被動而非立即</span>",
+        note: "你可以複製自己或其他玩家已佔領的美食小吃標籤地標卡。當你複製饒河夜市地標卡技能時，被動是「結算時若有其他夜市牌」，因此廟口夜市本身是不算分的。如果計算真的有點複雜，直接用我們提供的計算器吧 (笑)"
+    },
+    hsinchu: {
+        type: "被動效果",
+        typeClass: "tag-passive",
+        desc: "你的回合有 3 個行動點數，身份牌改為 3 張。",
+        note: "當你取得這張地標卡，你的遊戲就會開始變得跟其他玩家不一樣 (笑)。<br><br>當玩家對你使用「審查身份」需要猜中三張身份才可以獲得，當然如果你被懲罰剩下兩張身份，其他玩家就只需要猜你剩下的兩張就行了。<br><br>懸賞機制一樣是宣告兩次身份沒被抓包就可以翻開手牌證明，但你翻開手牌必須翻開三張（如果你有三張的話），當然如果你被懲罰剩下兩張就與其他玩家的流程一樣。"
+    },
+    taichung: {
+        type: "立即效果",
+        typeClass: "tag-immediate",
+        desc: "向其他玩家「徵收」1 個任一資源。",
+        note: "此地標技能不可被質疑，但可以透過宣告身份或「阿里山神木」地標技能阻止。"
+    },
+    taipei_art: {
+        type: "立即效果",
+        typeClass: "tag-immediate",
+        desc: "複製場上已佔領任一現代建設地標卡的技能。<br><span style='font-size:12px; color:#e11d48;'>#複製地標僅能複製被動而非立即</span>",
+        note: "透過複製場上已佔領的現代建設地標，來發動對應的強力被動技能效果！"
+    },
+    lanyu: {
+        type: "立即效果",
+        typeClass: "tag-immediate",
+        desc: "複製場上已佔領的任一歷史古蹟地標卡的技能。<br><span style='font-size:12px; color:#e11d48;'>#複製地標僅能複製被動而非立即</span>",
+        note: "透過複製場上已佔領的歷史古蹟地標，來發動對應的強力被動技能效果！"
+    }
+};
+
+function displayLandmarkSkill() {
+    let selectVal = document.getElementById("skillSelect").value;
+    let data = landmarkSkills[selectVal];
+    if (data) {
+        let tagEl = document.getElementById("skillTypeTag");
+        tagEl.className = "skill-type-tag " + data.typeClass;
+        tagEl.textContent = data.type;
+
+        document.getElementById("skillDescText").innerHTML = data.desc;
+        document.getElementById("skillNoteText").innerHTML = data.note;
+    }
+}
 
 function initCalculator() {
     const lmContainer = document.getElementById("landmarkContainer");
@@ -585,7 +733,6 @@ function calculateScore() {
     let hasFengshiye = effectiveLandmarks.some(function(el) { return el.item.name === "金門風獅爺"; });
     let hasLongtan = effectiveLandmarks.some(function(el) { return el.item.name === "屏東鵝鑾鼻燈塔"; });
 
-    // 建立場上所有夜市牌清單
     let nightMarketListWithSource = [];
     const validNightMarketNames = ["廟口夜市", "逢甲夜市", "羅東夜市", "台南花園夜市", "饒河夜市"];
 
@@ -608,18 +755,13 @@ function calculateScore() {
         }
     });
 
-    // 逐張計算勾選卡片的基本分、身分連動與一般 Combo
     effectiveLandmarks.forEach(function(el) {
         let lm = el.item;
         let idx = el.index;
         let currentCardScore = lm.score;
 
-        // 金門雙塔本尊基本分升級 (0分 -> 5分)
         if (lm.name === "金門莒光樓" && hasFengshiye) currentCardScore = 5;
         if (lm.name === "金門風獅爺" && hasGuguan) currentCardScore = 5;
-
-        // 蘭嶼拼板舟（古蹟複製卡）基本分與連動修正
-      
 
         baseScore += currentCardScore;
 
@@ -667,7 +809,6 @@ function calculateScore() {
             comboBonus += 2;
         }
 
-        // 新北市美術館（複製現代卡）自身因複製技能獲得的加分
         if (lm.isModernCopyCard) {
             let sel = document.getElementById("copy_modern_" + idx);
             if (sel) {
@@ -677,12 +818,11 @@ function calculateScore() {
                     if (otherModern > 0) comboBonus += otherModern * 3;
                 }
                 if (copiedName === "綠島燈塔" && hasLongtan) {
-                    comboBonus += 2; // 自己複製了綠島燈塔，且場上有鵝鑾鼻燈塔，自己獲得 +2 分！
+                    comboBonus += 2;
                 }
             }
         }
 
-        // 蘭嶼拼板舟（複製古蹟卡）自身因複製技能獲得的 Combo 加分（補上差額 3 分，讓總分 2 變 5）
         if (lm.isHistoricCopyCard) {
             let sel = document.getElementById("copy_historic_" + idx);
             if (sel) {
@@ -697,7 +837,6 @@ function calculateScore() {
         }
     });
 
-    // 夜市被動計算
     nightMarketListWithSource.forEach(function(market) {
         if (market.hasPassive) {
             let otherMarkets = nightMarketListWithSource.filter(function(m) {
@@ -750,6 +889,7 @@ function switchTab(tabId, btn) {
 
 window.onload = function() {
     initCalculator();
+    displayLandmarkSkill();
 };
 </script>
 
