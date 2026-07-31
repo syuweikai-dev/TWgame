@@ -238,7 +238,6 @@ ul {
     margin-top: 15px;
 }
 
-/* 技能介紹頁面專屬樣式 */
 .skill-select-container {
     margin-bottom: 15px;
 }
@@ -302,14 +301,59 @@ ul {
 </header>
 
 <div class="nav-buttons">
-    <button class="tab-btn active" onclick="switchTab('tab1', this)">🏛️ 回合行動</button>
+    <button class="tab-btn active" onclick="switchTab('tab6', this)">⚙️ 遊戲準備</button>
+    <button class="tab-btn" onclick="switchTab('tab1', this)">🏛️ 回合行動</button>
     <button class="tab-btn" onclick="switchTab('tab2', this)">⚖️ 遊戲規則</button>
     <button class="tab-btn" onclick="switchTab('tab3', this)">💡 地標卡技能</button>
     <button class="tab-btn" onclick="switchTab('tab4', this)">⭐ 分數說明</button>
     <button class="tab-btn" onclick="switchTab('tab5', this)">🧮 分數計算器</button>
 </div>
 
-<div id="tab1" class="content-card active">
+<!-- 遊戲準備及設置分頁 (移至最前面) -->
+<div id="tab6" class="content-card active">
+    <h2>⚙️ 遊戲準備與開局設置</h2>
+    
+    <h3>1. 🎴 身分牌庫設置與開局抽取</h3>
+    <p style="font-size: 13px; color: #666; margin-bottom: 10px;">本遊戲共有 14 種不同的部會身分（每種 4 張，共 56 張）。每次開局時，可使用下方工具根據玩家人數自動決定本局啟用的身分組合：</p>
+    
+    <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 15px; margin-bottom: 15px;">
+        <div style="margin-bottom: 10px;">
+            <label style="font-weight: bold; font-size: 14px; color: #1e3a8a;">選擇遊戲人數：</label>
+            <select id="setupPlayerCount" style="padding: 6px 10px; font-size: 14px; border-radius: 6px; border: 1px solid #94a3b8; margin-left: 8px;">
+                <option value="2">2 人開局</option>
+                <option value="3-4">3 - 4 人開局</option>
+                <option value="5">5 人開局</option>
+            </select>
+        </div>
+        <button onclick="generateGameSetup()" style="background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer;">🎲 隨機抽取本局身分組合</button>
+        
+        <div id="setupResultBox" style="margin-top: 12px; padding: 10px; background: #fff; border: 1px dashed #94a3b8; border-radius: 8px; font-size: 13px; display: none;">
+            <!-- 動態生成結果 -->
+        </div>
+    </div>
+    
+    <div class="tip-box" style="margin-bottom: 15px;">
+        💡 <b>基本規則說明</b>：
+        <ul style="margin-top: 5px; margin-bottom: 0;">
+            <li><b>2人局</b>：固定挑出 4 個核心身分（現代建設、自然風景、美食小吃、歷史古蹟）。</li>
+            <li><b>3-4人局</b>：4 個核心身分外，額外從剩下 10 個身分隨機抽 1 個加入。</li>
+            <li><b>5人局</b>：4 個核心身分外，額外從剩下 10 個身分隨機抽 2 個加入。</li>
+        </ul>
+    </div>
+
+    <h3>2. 🏛️ 地標市場設置</h3>
+    <ul>
+        <li>將台灣知名地標的地標卡牌洗勻。</li>
+        <li>在中央由左至右翻開 <b>4 張</b>作為公開市場，其餘堆疊為地標牌庫。</li>
+    </ul>
+
+    <h3>3. 🃏 初始手牌</h3>
+    <ul>
+        <li>每位玩家從牌庫暗抽 <b>2 張</b>，作為隱藏的蓋牌身分。</li>
+    </ul>
+</div>
+
+<div id="tab1" class="content-card" style="display:none;">
     <h2>⏱️ 玩家回合流程</h2>
     <h3>階段 1：基礎產出資源</h3>
     <ul><li>從中央銀行自由選擇拿取：<span class="highlight">1 個人力</span> 或 <span class="highlight">1 個食物</span>。</li></ul>
@@ -352,7 +396,6 @@ ul {
     </ul>
 </div>
 
-<!-- 新增：地標卡技能介紹分頁 -->
 <div id="tab3" class="content-card" style="display:none;">
     <h2>💡 特殊地標卡技能與規則註記</h2>
     <p style="font-size: 13px; color: #666; margin-bottom: 15px;">選擇你想查詢的地標卡，查看詳細技能效果與互動註記：</p>
@@ -486,7 +529,6 @@ const identities = [
     {name: "蚊化部", tag: "現代建設"}
 ];
 
-// 地標技能資料庫
 const landmarkSkills = {
     penghu: {
         type: "立即效果",
@@ -498,7 +540,7 @@ const landmarkSkills = {
         type: "立即效果",
         typeClass: "tag-immediate",
         desc: "可轉移此地標卡給指定一位玩家。",
-        note: "居然轉移這個地標給其他玩家？資源不是白花了嗎？這張卡在某些情況可以阻斷對手的節奏（慎用）。"
+        note: "居然轉移這個地標給其他玩家？資源不是白花了嗎？這張卡 in 某些情況可以阻斷對手的節奏（慎用）。"
     },
     qingtian: {
         type: "被動效果",
@@ -510,13 +552,13 @@ const landmarkSkills = {
         type: "立即效果",
         typeClass: "tag-immediate",
         desc: "複製場上已佔領任一美食小吃地標卡的技能。<br><span style='font-size:12px; color:#e11d48;'>#複製地標僅能複製被動而非立即</span>",
-        note: "你可以複製自己或其他玩家已佔領的美食小吃標籤地標卡。當你複製饒河夜市地標卡技能時，被動是「結算時若有其他夜市牌」，因此廟口夜市本身是不算分的。如果計算真的有點複雜，直接用我們提供的計算器吧 (笑)"
+        note: "你可以複製自己或其他玩家已佔領的美食小吃標籤地標卡。當你複製饒河夜市地標卡技能時，被動是「結算時若有其他夜市牌」，因此廟口夜市本身是不算分的。"
     },
     hsinchu: {
         type: "被動效果",
         typeClass: "tag-passive",
         desc: "你的回合有 3 個行動點數，身份牌改為 3 張。",
-        note: "當你取得這張地標卡，你的遊戲就會開始變得跟其他玩家不一樣 (笑)。<br><br>當玩家對你使用「審查身份」需要猜中三張身份才可以獲得，當然如果你被懲罰剩下兩張身份，其他玩家就只需要猜你剩下的兩張就行了。<br><br>懸賞機制一樣是宣告兩次身份沒被抓包就可以翻開手牌證明，但你翻開手牌必須翻開三張（如果你有三張的話），當然如果你被懲罰剩下兩張就與其他玩家的流程一樣。"
+        note: "當你取得這張地標卡，你的遊戲就會開始變得跟其他玩家不一樣 (笑)。"
     },
     taichung: {
         type: "立即效果",
@@ -538,6 +580,50 @@ const landmarkSkills = {
     }
 };
 
+const poolIdentities = [
+    {name: "數喂發展部", tag: "現代建設"},
+    {name: "內症部", tag: "自然風景"},
+    {name: "財掙部", tag: "無標籤"},
+    {name: "蕉通部", tag: "美食小吃"},
+    {name: "狗防部", tag: "自然風景"},
+    {name: "教鬱部", tag: "歷史古蹟"},
+    {name: "外驕部", tag: "無標籤"},
+    {name: "衛生浮力部", tag: "美食小吃"},
+    {name: "法霧部", tag: "歷史古蹟"},
+    {name: "蚊化部", tag: "現代建設"}
+];
+
+function generateGameSetup() {
+    let playerCount = document.getElementById("setupPlayerCount").value;
+    let selectedSet = [
+        {name: "金雞部", tag: "現代建設"},
+        {name: "勞洞部", tag: "自然風景"},
+        {name: "農YA部", tag: "美食小吃"},
+        {name: "環淨部", tag: "歷史古蹟"}
+    ];
+    
+    let poolCopy = [...poolIdentities];
+    poolCopy.sort(() => Math.random() - 0.5);
+    
+    if (playerCount === "3-4") {
+        selectedSet.push(poolCopy[0]);
+    } else if (playerCount === "5") {
+        selectedSet.push(poolCopy[0]);
+        selectedSet.push(poolCopy[1]);
+    }
+    
+    let resultBox = document.getElementById("setupResultBox");
+    resultBox.style.display = "block";
+    
+    let html = `<strong>🎯 本局建議啟用的身分牌清單（共 ${selectedSet.length} 種）：</strong><ul style="margin: 5px 0 0 20px;">`;
+    selectedSet.forEach(item => {
+        html += `<li><b>${item.name}</b> <span style="color: #666; font-size: 12px;">(${item.tag})</span></li>`;
+    });
+    html += `</ul>`;
+    
+    resultBox.innerHTML = html;
+}
+
 function displayLandmarkSkill() {
     let selectVal = document.getElementById("skillSelect").value;
     let data = landmarkSkills[selectVal];
@@ -545,7 +631,6 @@ function displayLandmarkSkill() {
         let tagEl = document.getElementById("skillTypeTag");
         tagEl.className = "skill-type-tag " + data.typeClass;
         tagEl.textContent = data.type;
-
         document.getElementById("skillDescText").innerHTML = data.desc;
         document.getElementById("skillNoteText").innerHTML = data.note;
     }
@@ -561,11 +646,9 @@ function initCalculator() {
         label.id = "label_lm_" + index;
         
         let extraHtml = "";
-        
         if (item.hasWorkerInput) {
             extraHtml += '<div class="combo-control" onclick="event.stopPropagation()"><span>人力:</span><input type="number" id="worker_' + index + '" value="0" min="0" style="width:40px;" onchange="calculateScore()"></div>';
         }
-        
         if (item.isFoodCopyCard) {
             let foodItems = landmarks.filter(function(l) { return l.tag === "美食小吃"; });
             let options = '<option value="-1">不複製</option>';
@@ -574,7 +657,6 @@ function initCalculator() {
             }
             extraHtml += '<div class="combo-control" onclick="event.stopPropagation()"><span>複製夜市:</span><select id="copy_food_' + index + '" onchange="calculateScore()">' + options + '</select></div>';
         }
-
         if (item.isDoubleSelector) {
             let options = '<option value="-1">無加倍</option>';
             for (let i = 0; i < landmarks.length; i++) {
@@ -582,7 +664,6 @@ function initCalculator() {
             }
             extraHtml += '<div class="combo-control" onclick="event.stopPropagation()"><span>101加倍:</span><select id="double_target_' + index + '" onchange="handle101Selection(); calculateScore()">' + options + '</select></div>';
         }
-
         if (item.isModernCopyCard) {
             let modernItems = landmarks.filter(function(l) { return l.tag === "現代建設"; });
             let options = '<option value="-1">不複製</option>';
@@ -591,7 +672,6 @@ function initCalculator() {
             }
             extraHtml += '<div class="combo-control" onclick="event.stopPropagation()"><span>複製現代:</span><select id="copy_modern_' + index + '" onchange="calculateScore()">' + options + '</select></div>';
         }
-
         if (item.isHistoricCopyCard) {
             let historicItems = landmarks.filter(function(l) { return l.tag === "歷史古蹟"; });
             let options = '<option value="-1">不複製</option>';
@@ -652,16 +732,6 @@ function handle101Selection() {
 
 function handleLandmarkCheckboxChange(index) {
     let chk = document.getElementById("chk_lm_" + index);
-    
-    landmarks.forEach(function(item, idx) {
-        if (item.isDoubleSelector && idx === index) {
-            if (!chk.checked) {
-                let sel = document.getElementById("double_target_" + idx);
-                if (sel) sel.value = "-1";
-            }
-        }
-    });
-
     if (!chk.checked) {
         landmarks.forEach(function(item, idx) {
             if (item.isDoubleSelector) {
@@ -689,40 +759,13 @@ function calculateScore() {
         }
     });
 
-    landmarks.forEach(function(item, idx) {
-        if (item.isDoubleSelector) {
-            let chk = document.getElementById("chk_lm_" + idx);
-            if (chk && !chk.checked) {
-                let sel = document.getElementById("double_target_" + idx);
-                if (sel) sel.value = "-1";
-            }
-        }
-    });
-
-    landmarks.forEach(function(item, idx) {
-        if (item.isDoubleSelector) {
-            let chk = document.getElementById("chk_lm_" + idx);
-            let sel = document.getElementById("double_target_" + idx);
-            if (chk && chk.checked && sel && parseInt(sel.value) !== -1) {
-                let targetIdx = parseInt(sel.value);
-                let targetChk = document.getElementById("chk_lm_" + targetIdx);
-                if (targetChk && !targetChk.checked) {
-                    sel.value = "-1";
-                }
-            }
-        }
-    });
-
     handle101Selection();
 
     let effectiveLandmarks = [];
     landmarks.forEach(function(item, idx) {
         let chk = document.getElementById("chk_lm_" + idx);
         if (chk && chk.checked) {
-            effectiveLandmarks.push({
-                item: item,
-                index: idx
-            });
+            effectiveLandmarks.push({ item: item, index: idx });
         }
     });
 
@@ -739,19 +782,11 @@ function calculateScore() {
     effectiveLandmarks.forEach(function(el) {
         if (validNightMarketNames.includes(el.item.name)) {
             let hasRahePassive = (el.item.name === "饒河夜市");
-            
             if (el.item.isFoodCopyCard) {
                 let sel = document.getElementById("copy_food_" + el.index);
-                if (sel && sel.value === "饒河夜市") {
-                    hasRahePassive = true;
-                }
+                if (sel && sel.value === "饒河夜市") { hasRahePassive = true; }
             }
-
-            nightMarketListWithSource.push({
-                name: el.item.name,
-                hasPassive: hasRahePassive,
-                cardIndex: el.index
-            });
+            nightMarketListWithSource.push({ name: el.item.name, hasPassive: hasRahePassive, cardIndex: el.index });
         }
     });
 
@@ -778,11 +813,8 @@ function calculateScore() {
         }
 
         if (identityTags[lm.tag] && identityTags[lm.tag] > 0) {
-            if (lm.tag === "現代建設") {
-                synergyBonus += 2;
-            } else {
-                synergyBonus += 1;
-            }
+            if (lm.tag === "現代建設") { synergyBonus += 2; } 
+            else { synergyBonus += 1; }
         }
 
         if (lm.hasWorkerInput) {
@@ -805,47 +837,13 @@ function calculateScore() {
             if (otherModern > 0) comboBonus += otherModern * 3;
         }
 
-        if (lm.hasLighthouseCombo && hasLongtan) {
-            comboBonus += 2;
-        }
-
-        if (lm.isModernCopyCard) {
-            let sel = document.getElementById("copy_modern_" + idx);
-            if (sel) {
-                let copiedName = sel.value;
-                if (copiedName === "桃園國際機場") {
-                    let otherModern = modernCount - 1;
-                    if (otherModern > 0) comboBonus += otherModern * 3;
-                }
-                if (copiedName === "綠島燈塔" && hasLongtan) {
-                    comboBonus += 2;
-                }
-            }
-        }
-
-        if (lm.isHistoricCopyCard) {
-            let sel = document.getElementById("copy_historic_" + idx);
-            if (sel) {
-                let copiedName = sel.value;
-                if (copiedName === "金門莒光樓" && hasFengshiye) {
-                    comboBonus += 3; 
-                }
-                if (copiedName === "金門風獅爺" && hasGuguan) {
-                    comboBonus += 3; 
-                }
-            }
-        }
+        if (lm.hasLighthouseCombo && hasLongtan) { comboBonus += 2; }
     });
 
     nightMarketListWithSource.forEach(function(market) {
         if (market.hasPassive) {
-            let otherMarkets = nightMarketListWithSource.filter(function(m) {
-                return m.cardIndex !== market.cardIndex;
-            });
-            
-            if (otherMarkets.length > 0) {
-                comboBonus += otherMarkets.length * 2;
-            }
+            let otherMarkets = nightMarketListWithSource.filter(function(m) { return m.cardIndex !== market.cardIndex; });
+            if (otherMarkets.length > 0) { comboBonus += otherMarkets.length * 2; }
         }
     });
 
@@ -868,9 +866,7 @@ function calculateScore() {
 }
 
 function resetCalculator() {
-    document.querySelectorAll(".calculator-section input[type='checkbox']").forEach(function(cb) {
-        cb.checked = false;
-    });
+    document.querySelectorAll(".calculator-section input[type='checkbox']").forEach(function(cb) { cb.checked = false; });
     document.querySelectorAll(".calculator-section input[type='number']").forEach(function(input) { input.value = 0; });
     document.querySelectorAll(".calculator-section select").forEach(function(sel) { sel.value = sel.options[0].value; });
     document.querySelector('input[name="hasReserved"][value="no"]').checked = true;
