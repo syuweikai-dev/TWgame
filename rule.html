@@ -309,12 +309,12 @@ ul {
     <button class="tab-btn" onclick="switchTab('tab5', this)">🧮 分數計算器</button>
 </div>
 
-<!-- 遊戲準備及設置分頁 (移至最前面) -->
+<!-- 遊戲準備及設置分頁 -->
 <div id="tab6" class="content-card active">
     <h2>⚙️ 遊戲準備與開局設置</h2>
     
     <h3>1. 🎴 身分牌庫設置與開局抽取</h3>
-    <p style="font-size: 13px; color: #666; margin-bottom: 10px;">本遊戲共有 14 種不同的部會身分（每種 4 張，共 56 張）。每次開局時，可使用下方工具根據玩家人數自動決定本局啟用的身分組合：</p>
+    <p style="font-size: 13px; color: #666; margin-bottom: 10px;">本遊戲共有 14 種不同的部會身分。每次開局時，可使用下方工具根據玩家人數自動決定本局啟用的身分組合：</p>
     
     <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 15px; margin-bottom: 15px;">
         <div style="margin-bottom: 10px;">
@@ -325,7 +325,10 @@ ul {
                 <option value="5">5 人開局</option>
             </select>
         </div>
-        <button onclick="generateGameSetup()" style="background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer;">🎲 隨機抽取本局身分組合</button>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button onclick="generateGameSetup()" style="background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer;">🎲 隨機抽取本局身分組合</button>
+            <button onclick="resetGameSetup()" style="background: #64748b; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer;">🔄 重新開始新局（重置）</button>
+        </div>
         
         <div id="setupResultBox" style="margin-top: 12px; padding: 10px; background: #fff; border: 1px dashed #94a3b8; border-radius: 8px; font-size: 13px; display: none;">
             <!-- 動態生成結果 -->
@@ -335,7 +338,7 @@ ul {
     <div class="tip-box" style="margin-bottom: 15px;">
         💡 <b>基本規則說明</b>：
         <ul style="margin-top: 5px; margin-bottom: 0;">
-            <li><b>2人局</b>：固定挑出 4 個核心身分（現代建設、自然風景、美食小吃、歷史古蹟）。</li>
+            <li><b>2人局</b>：隨機從 4 大標籤核心中洗牌挑出 4 個身分。</li>
             <li><b>3-4人局</b>：4 個核心身分外，額外從剩下 10 個身分隨機抽 1 個加入。</li>
             <li><b>5人局</b>：4 個核心身分外，額外從剩下 10 個身分隨機抽 2 個加入。</li>
         </ul>
@@ -417,7 +420,7 @@ ul {
         <div id="skillTypeTag" class="skill-type-tag tag-immediate">立即效果</div>
         <div id="skillDescText" class="skill-desc-text">指定一位玩家互換兩張身份牌。</div>
         <div class="skill-note-box" id="skillNoteText">
-            自己與另一位玩家互換身份牌，當有一方身份牌只有一張，僅能互換一張。此牌在某些情況能發揮出強大的作用 (笑)
+            自己與另一位玩家互換身份牌，當有一方身份牌只有一張，僅能互換一張。此牌 in 某些情況能發揮出強大的作用 (笑)
         </div>
     </div>
 </div>
@@ -580,6 +583,13 @@ const landmarkSkills = {
     }
 };
 
+// 基礎核心身分與備用身分庫設定
+const coreIdentitiesPool = [
+    [{name: "金雞部", tag: "現代建設"}, {name: "勞洞部", tag: "自然風景"}, {name: "農YA部", tag: "美食小吃"}, {name: "環淨部", tag: "歷史古蹟"}],
+    [{name: "蚊化部", tag: "現代建設"}, {name: "內症部", tag: "自然風景"}, {name: "衛生浮力部", tag: "美食小吃"}, {name: "教鬱部", tag: "歷史古蹟"}],
+    [{name: "數喂發展部", tag: "現代建設"}, {name: "狗防部", tag: "自然風景"}, {name: "蕉通部", tag: "美食小吃"}, {name: "法霧部", tag: "歷史古蹟"}]
+];
+
 const poolIdentities = [
     {name: "數喂發展部", tag: "現代建設"},
     {name: "內症部", tag: "自然風景"},
@@ -590,17 +600,17 @@ const poolIdentities = [
     {name: "外驕部", tag: "無標籤"},
     {name: "衛生浮力部", tag: "美食小吃"},
     {name: "法霧部", tag: "歷史古蹟"},
-    {name: "蚊化部", tag: "現代建設"}
+    {name: "蚊化部", tag: "現代建設"},
+    {name: "財掙部", tag: "無標籤"},
+    {name: "外驕部", tag: "無標籤"}
 ];
 
 function generateGameSetup() {
     let playerCount = document.getElementById("setupPlayerCount").value;
-    let selectedSet = [
-        {name: "金雞部", tag: "現代建設"},
-        {name: "勞洞部", tag: "自然風景"},
-        {name: "農YA部", tag: "美食小吃"},
-        {name: "環淨部", tag: "歷史古蹟"}
-    ];
+    
+    // 隨機挑選一套核心身分組合 (確保涵蓋四大標籤但每次洗牌不同)
+    let shuffledCores = [...coreIdentitiesPool].sort(() => Math.random() - 0.5);
+    let selectedSet = [...shuffledCores[0]];
     
     let poolCopy = [...poolIdentities];
     poolCopy.sort(() => Math.random() - 0.5);
@@ -622,6 +632,13 @@ function generateGameSetup() {
     html += `</ul>`;
     
     resultBox.innerHTML = html;
+}
+
+function resetGameSetup() {
+    document.getElementById("setupPlayerCount").value = "2";
+    let resultBox = document.getElementById("setupResultBox");
+    resultBox.style.display = "none";
+    resultBox.innerHTML = "";
 }
 
 function displayLandmarkSkill() {
