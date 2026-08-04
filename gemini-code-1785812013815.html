@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overlap Attack - 戰術抽象棋藝遊戲</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: rgba(30, 41, 59, 0.85);
+            --text-color: #f8fafc;
+            --black-player: #1e293b;
+            --white-player: #f1f5f9;
+            --accent: #3b82f6;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            padding: 10px;
+        }
+
+        h1 { margin: 5px 0; font-size: 1.5rem; color: #60a5fa; }
+        p.subtitle { margin: 0 0 10px 0; font-size: 0.85rem; color: #94a3b8; }
+
+        .game-container {
+            display: flex;
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
+            justify-content: center;
+            padding: 10px;
+            box-sizing: border-box;
+            flex-wrap: wrap;
+        }
+
+        .board-wrapper {
+            position: relative;
+            background: radial-gradient(circle, #1e293b 0%, #090d16 100%);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            border: 1px solid #334155;
+        }
+
+        canvas {
+            display: block;
+            cursor: pointer;
+        }
+
+        .sidebar {
+            width: 320px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(8px);
+            border-radius: 16px;
+            padding: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            border: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-sizing: border-box;
+        }
+
+        .status-box {
+            background: rgba(15, 23, 42, 0.6);
+            padding: 10px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .status-box h3 { margin: 0 0 5px 0; font-size: 1rem; }
+        .status-box p { margin: 0; font-size: 0.85rem; color: #cbd5e1; }
+
+        .panel-section {
+            background: rgba(15, 23, 42, 0.4);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .panel-section h4 { margin: 0 0 8px 0; font-size: 0.9rem; color: #93c5fd; border-bottom: 1px solid #334155; padding-bottom: 4px; }
+
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        button:hover { background: #1d4ed8; }
+        button:disabled { background: #475569; cursor: not-allowed; opacity: 0.7; }
+
+        .log-box {
+            height: 100px;
+            overflow-y: auto;
+            background: #090d16;
+            padding: 6px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-family: monospace;
+            color: #cbd5e1;
+        }
+
+        .rules-hint {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            line-height: 1.4;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            display: none;
+        }
+
+        .modal-content {
+            background: #1e293b;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 400px;
+            border: 1px solid #334155;
+        }
+
+        .modal-content h2 { margin-top: 0; color: #60a5fa; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>OVERLAP ATTACK</h1>
+    <p class="subtitle">單位合併與移動的抽象戰術棋藝遊戲 (Rules v4.0)</p>
+</header>
+
+<div class="game-container">
+    <!-- 棋盤區域 -->
+    <div class="board-wrapper">
+        <canvas id="boardCanvas" width="600" height="520"></canvas>
+    </div>
+
+    <!-- 側邊控制台 -->
+    <div class="sidebar">
+        <div class="status-box">
+            <h3 id="currentTurnText">當前回合：黑方 (Player 1)</h3>
+            <p id="currentPhaseText">階段：移動單位</p>
+        </div>
+
+        <div class="panel-section">
+            <h4>操作面板</h4>
+            <div id="actionControls">
+                <button id="endPhaseBtn" onclick="endCurrentPhase()">結束當前階段 / 回合</button>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <h4>特殊 Tokens</h4>
+            <div style="display: flex; gap: 5px;">
+                <button id="tokenPlusBtn" onclick="useToken('PLUS')">+ Token (可用)</button>
+                <button id="tokenUTurnBtn" onclick="useToken('UTURN')">U-Turn (可用)</button>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <h4>遊戲紀錄</h4>
+            <div id="gameLog" class="log-box">遊戲開始！請依照規則移動或放置單位。<br></div>
+        </div>
+
+        <div class="panel-section">
+            <h4>快速提示</h4>
+            <div class="rules-hint" id="rulesHint">
+                • 點擊己方棋子查看移動範圍。<br>
+                • 移動 Lv.1 可跳躍或合併。<br>
+                • 佔領對手 Castle 即可獲勝！
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 彈跳對話框 (如重生擲骰選擇) -->
+<div id="modal" class="modal">
+    <div class="modal-content" id="modalContent">
+        <h2>事件</h2>
+        <p id="modalText">請選擇...</p>
+        <div id="modalButtons" style="margin-top: 15px; display: flex; gap: 10px; justify-content: center;"></div>
+    </div>
+</div>
+
+<script>
+// --- 遊戲狀態與常數設定 ---
+const canvas = document.getElementById('boardCanvas');
+const ctx = canvas.getContext('2d');
+
+const HEX_RADIUS = 36;
+const SQRT3 = Math.sqrt(3);
+
+// 棋盤座標定義 (Axial coordinates q, r)
+// 這是一個約略對稱於左右發起點與中央中立區的六角棋盤佈局
+const BOARD_LAYOUT = [
+    // 中間橫條及上下擴展，建構出類似規則書的蜂巢地圖
+    {q: 0, r: 0, type: 'neutral'},
+    {q: 1, r: -1, type: 'neutral'}, {q: 1, r: 0, type: 'neutral'}, {q: 0, r: 1, type: 'neutral'},
+    {q: -1, r: 1, type: 'neutral'}, {q: -1, r: 0, type: 'neutral'}, {q: 0, r: -1, type: 'neutral'},
+    
+    // 外圍擴展區與重生區 (1~6 數字區)
+    {q: 2, r: -2, type: 'neutral'}, {q: 2, r: -1, type: 'neutral'}, {q: 2, r: 0, type: 'neutral'},
+    {q: 1, r: 1, type: 'neutral'}, {q: 0, r: 2, type: 'neutral'}, {q: -1, r: 2, type: 'neutral'},
+    {q: -2, r: 2, type: 'neutral'}, {q: -2, r: 1, type: 'neutral'}, {q: -2, r: 0, type: 'neutral'},
+    {q: -1, r: -1, type: 'neutral'}, {q: 0, r: -2, type: 'neutral'}, {q: 1, r: -2, type: 'neutral'},
+
+    // 更外圍邊界與 Castle (主堡)
+    {q: 3, r: -3, type: 'neutral'}, {q: 3, r: -2, type: 'neutral'}, {q: 3, r: -1, type: 'neutral'}, {q: 3, r: 0, type: 'neutral'},
+    {q: -3, r: 3, type: 'neutral'}, {q: -3, r: 2, type: 'neutral'}, {q: -3, r: 1, type: 'neutral'}, {q: -3, r: 0, type: 'neutral'},
+    {q: 2, r: 1, type: 'neutral'}, {q: 1, r: 2, type: 'neutral'}, {q: -1, r: -2, type: 'neutral'}, {q: -2, r: -1, type: 'neutral'},
+
+    // 特殊位置指定：黑方主堡與白方主堡
+    // 為了視覺完美，我們定義左右兩側極端點為 Castle
+];
+
+// 為了精準對齊遊戲實體對局，手動建構一個標準的 37 格蜂巢網格 (Radius 3 的 Hexagon Grid)
+let hexGrid = [];
+for (let q = -3; q <= 3; q++) {
+    let r1 = Math.max(-3, -q - 3);
+    let r2 = Math.min(3, -q + 3);
+    for (let r = r1; r <= r2; r++) {
+        let type = 'normal';
+        // 左右兩端設定為主堡 Castle
+        if (q === 3 && r === -3) type = 'black_castle';
+        else if (q === -3 && r === 3) type = 'white_castle';
+        
+        // 防禦區 (Defensive Zone) - 圍繞 Castle 的 6 個周遭格子
+        // 簡單判定與主堡距離為 1 的格子
+        hexGrid.push({ q: q, r: r, s: -q-r, type: type, unit: null });
+    }
+}
+
+// 標記防禦區
+hexGrid.forEach(hex => {
+    // 黑方 Castle 在 (3, -3, 0)
+    let distToBlackCastle = Math.max(Math.abs(hex.q - 3), Math.abs(hex.r - (-3)), Math.abs(hex.s - 0));
+    // 白方 Castle 在 (-3, 3, 0)
+    let distToWhiteCastle = Math.max(Math.abs(hex.q - (-3)), Math.abs(hex.r - 3), Math.abs(hex.s - 0));
+
+    if (distToBlackCastle === 1) hex.defZone = 'black';
+    if (distToWhiteCastle === 1) hex.defZone = 'white';
+});
+
+// 遊戲狀態變數
+let gameState = {
+    turn: 'black', // 'black' 或 'white'
+    phase: 'move', // 'move', 'respawn'
+    selectedHex: null,
+    validMoves: [],
+    blackTokens: { plus: true, uTurn: true },
+    whiteTokens: { plus: true, uTurn: true },
+    activeToken: null, // 當前啟用的 Token
+    blackLv1RespawnCount: 0,
+    whiteLv1RespawnCount: 0,
+    gameOver: false
+};
+
+// 初始化佈局：放置雙方初始棋子 (模擬初始 3 次擲骰佈署)
+function initGame() {
+    // 尋找黑方與白方起始放置點
+    // 根據規則：初始放置 1x Lv.2, 2x Lv.1
+    // 我們將黑方預設放在右側半場，白方放在左側半場
+    let blackBase = hexGrid.find(h => h.q === 3 && h.r === -3);
+    let whiteBase = hexGrid.find(h => h.q === -3 && h.r === 3);
+
+    // 示範佈署：將棋子放置於主堡附近
+    let bNear = hexGrid.filter(h => h.q === 2 && h.r >= -2 && h.r <= 0);
+    let wNear = hexGrid.filter(h => h.q === -2 && h.r <= 2 && h.r >= 0);
+
+    if (bNear.length >= 3) {
+        bNear[0].unit = { player: 'black', tier: 2, fresh: false };
+        bNear[1].unit = { player: 'black', tier: 1, fresh: false };
+        bNear[2].unit = { player: 'black', tier: 1, fresh: false };
+    }
+    if (wNear.length >= 3) {
+        wNear[0].unit = { player: 'white', tier: 2, fresh: false };
+        wNear[1].unit = { player: 'white', tier: 1, fresh: false };
+        wNear[2].unit = { player: 'white', tier: 1, fresh: false };
+    }
+
+    logMessage("遊戲初始化完成！黑方先手。");
+    updateUI();
+    drawBoard();
+}
+
+// 座標轉換：Axial (q, r) 轉 Canvas 像素
+function hexToPixel(q, r) {
+    let x = HEX_RADIUS * (3/2 * q);
+    let y = HEX_RADIUS * (SQRT3/2 * q + SQRT3 * r);
+    return {
+        x: x + canvas.width / 2,
+        y: y + canvas.height / 2
+    };
+}
+
+// 繪製六角格
+function drawHex(x, y, radius, fillStyle, strokeStyle, label) {
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+        let angle = (i * Math.PI) / 3;
+        let hx = x + radius * Math.cos(angle);
+        let hy = y + radius * Math.sin(angle);
+        if (i === 0) ctx.moveTo(hx, hy);
+        else ctx.lineTo(hx, hy);
+    }
+    ctx.closePath();
+    ctx.fillStyle = fillStyle;
+    ctx.fill();
+    ctx.strokeStyle = strokeStyle;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    if (label) {
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, x, y - radius * 0.6);
+    }
+}
+
+// 繪製棋盤
+function drawBoard() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    hexGrid.forEach(hex => {
+        let pt = hexToPixel(hex.q, hex.r);
+        let fill = '#1e293b';
+        let stroke = '#334155';
+
+        if (hex.type === 'black_castle') { fill = '#451a03'; stroke = '#f59e0b'; }
+        else if (hex.type === 'white_castle') { fill = '#172554'; stroke = '#38bdf8'; }
+        else if (hex.defZone === 'black') { fill = '#311002'; stroke = '#78350f'; }
+        else if (hex.defZone === 'white') { fill = '#0f172a'; stroke = '#1e3a8a'; }
+
+        // 高亮選取的格子
+        if (gameState.selectedHex && gameState.selectedHex.q === hex.q && gameState.selectedHex.r === hex.r) {
+            stroke = '#eab308';
+        }
+
+        // 高亮有效移動位置
+        let isValidMove = gameState.validMoves.some(m => m.q === hex.q && m.r === hex.r);
+        if (isValidMove) {
+            fill = '#166534';
+            stroke = '#4ade80';
+        }
+
+        drawHex(pt.x, pt.y, HEX_RADIUS - 2, fill, stroke);
+
+        // 繪製棋子
+        if (hex.unit) {
+            drawUnit(pt.x, pt.y, hex.unit);
+        }
+    });
+}
+
+// 繪製棋子 (Tier 1-4)
+function drawUnit(x, y, unit) {
+    ctx.beginPath();
+    let radius = HEX_RADIUS * 0.55;
+    ctx.arc(x, y, radius, 0, 2 * Math.PI);
+    ctx.fillStyle = unit.player === 'black' ? '#0f172a' : '#f8fafc';
+    ctx.fill();
+    ctx.strokeStyle = unit.player === 'black' ? '#38bdf8' : '#e11d48';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // 階級標示 (Tier 符號或數字)
+    ctx.fillStyle = unit.player === 'black' ? '#f8fafc' : '#0f172a';
+    ctx.font = 'bold 14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    let symbol = 'Lv.' + unit.tier;
+    if (unit.tier === 1) symbol = 'I';
+    if (unit.tier === 2) symbol = 'II';
+    if (unit.tier === 3) symbol = 'III';
+    if (unit.tier === 4) symbol = 'IV';
+    ctx.fillText(symbol, x, y);
+
+    // 新鮮未動狀態標示
+    if (unit.fresh) {
+        ctx.beginPath();
+        ctx.arc(x + radius * 0.6, y - radius * 0.6, 5, 0, 2 * Math.PI);
+        ctx.fillStyle = '#eab308';
+        ctx.fill();
+    }
+}
+
+// 點擊事件處理
+canvas.addEventListener('click', (e) => {
+    if (gameState.gameOver) return;
+    
+    let rect = canvas.getBoundingClientRect();
+    let mouseX = e.clientX - rect.left;
+    let mouseY = e.clientY - rect.top;
+
+    // 尋找被點擊的六角格
+    let clickedHex = null;
+    let minDst = Infinity;
+    hexGrid.forEach(hex => {
+        let pt = hexToPixel(hex.q, hex.r);
+        let dst = Math.hypot(pt.x - mouseX, pt.y - mouseY);
+        if (dst < HEX_RADIUS && dst < minDst) {
+            minDst = dst;
+            clickedHex = hex;
+        }
+    });
+
+    if (!clickedHex) return;
+
+    handleHexClick(clickedHex);
+});
+
+function handleHexClick(hex) {
+    const p = gameState.turn;
+
+    // 如果點擊了有效移動目標格
+    let moveTarget = gameState.validMoves.find(m => m.q === hex.q && m.r === hex.r);
+    if (moveTarget) {
+        executeMove(gameState.selectedHex, hex, moveTarget.isSpecial);
+        return;
+    }
+
+    // 選擇自己的棋子
+    if (hex.unit && hex.unit.player === p) {
+        if (hex.unit.fresh) {
+            logMessage("此單位為剛合併的新單位，本回合無法移動！");
+            return;
+        }
+        gameState.selectedHex = hex;
+        gameState.validMoves = calculateValidMoves(hex);
+        drawBoard();
+        return;
+    }
+
+    // 取消選擇
+    gameState.selectedHex = null;
+    gameState.validMoves = [];
+    drawBoard();
+}
+
+// 計算移動範圍與特殊移動
+function calculateValidMoves(hex) {
+    let moves = [];
+    let u = hex.unit;
+    let q = hex.q, r = hex.r, s = hex.s;
+
+    // 六個相鄰方向
+    let directions = [
+        {q: 1, r: 0, s: -1}, {q: 1, r: -1, s: 0}, {q: 0, r: -1, s: 1},
+        {q: -1, r: 0, s: 1}, {q: -1, r: 1, s: 0}, {q: 0, r: 1, s: -1}
+    ];
+
+    // 1. 一般移動 (Normal Movement: 1格)
+    directions.forEach(d => {
+        let nq = q + d.q, nr = r + d.r, ns = s + d.s;
+        let target = hexGrid.find(h => h.q === nq && h.r === nr);
+        if (target) {
+            // 檢查防禦區限制：對手不能進入防禦區（除非直接進 Castle 獲勝）
+            if (target.defZone && target.defZone !== u.player && target.type !== 'black_castle' && target.type !== 'white_castle') {
+                return;
+            }
+            if (!target.unit || target.unit.player !== u.player) {
+                moves.push({ q: nq, r: nr, isSpecial: false });
+            }
+        }
+    });
+
+    // 2. 特殊移動 (Special Movement)
+    if (u.tier === 1) {
+        // Lv.1 Overlap Jump: 跳過相鄰棋子，落在直線上 3 格遠
+        directions.forEach(d => {
+            let adjHex = hexGrid.find(h => h.q === q + d.q && h.r === r + d.r);
+            let jumpHex = hexGrid.find(h => h.q === q + d.q * 3 && h.r === r + d.r * 3);
+            if (adjHex && adjHex.unit && jumpHex) {
+                if (!jumpHex.unit || jumpHex.unit.player !== u.player) {
+                    moves.push({ q: jumpHex.q, r: jumpHex.r, isSpecial: true });
+                }
+            }
+        });
+    } else if (u.tier === 2) {
+        // Lv.2 "C" Step: 前進1格後分支左前或右前
+        // 簡化實作：檢查特定二階路徑
+        directions.forEach((d1, idx) => {
+            let d2_left = directions[(idx + 1) % 6];
+            let d2_right = directions[(idx + 5) % 6];
+            [d2_left, d2_right].forEach(d2 => {
+                let tq = q + d1.q + d2.q, tr = r + d1.r + d2.r;
+                let target = hexGrid.find(h => h.q === tq && h.r === tr);
+                if (target && (!target.unit || target.unit.player !== u.player)) {
+                    moves.push({ q: target.q, r: target.r, isSpecial: true });
+                }
+            });
+        });
+    } else if (u.tier === 3) {
+        // Lv.3 Dash: 直衝 2 格
+        directions.forEach(d => {
+            let target = hexGrid.find(h => h.q === q + d.q * 2 && h.r === r + d.r * 2);
+            let mid = hexGrid.find(h => h.q === q + d.q && h.r === r + d.r);
+            if (target && mid && !mid.unit) { // 需中間無阻擋
+                if (!target.unit || target.unit.player !== u.player) {
+                    moves.push({ q: target.q, r: target.r, isSpecial: true });
+                }
+            }
+        });
+    } else if (u.tier === 4) {
+        // Lv.4 Versatile: 可執行 Lv.3 Dash 或 Lv.2 C Step
+        // 這裡合併兩者
+        // ... (省略部分重複邏輯，可擴充)
+    }
+
+    return moves;
+}
+
+// 執行移動與合併判定
+function executeMove(fromHex, toHex, isSpecial) {
+    let movingUnit = fromHex.unit;
+
+    // 檢查是否獲勝 (佔領對手 Castle)
+    if ((movingUnit.player === 'black' && toHex.type === 'white_castle') ||
+        (movingUnit.player === 'white' && toHex.type === 'black_castle')) {
+        toHex.unit = movingUnit;
+        fromHex.unit = null;
+        triggerWin(movingUnit.player);
+        return;
+    }
+
+    // 檢查戰鬥與吃子免疫規則
+    if (toHex.unit) {
+        let defender = toHex.unit;
+        if (!isSpecial) {
+            // 近戰相剋免疫表檢查
+            // Lv.1 免疫 Lv.2 | Lv.2 免疫 Lv.3 | Lv.3 免疫 Lv.4 | Lv.4 免疫 Lv.1
+            let immune = (movingUnit.tier === 1 && defender.tier === 2) ||
+                         (movingUnit.tier === 2 && defender.tier === 3) ||
+                         (movingUnit.tier === 3 && defender.tier === 4) ||
+                         (movingUnit.tier === 4 && defender.tier === 1);
+            if (immune) {
+                logMessage(`攻擊失敗！依據階級免疫，Lv.${movingUnit.tier} 無法透過一般移動攻擊 Lv.${defender.tier}`);
+                return;
+            }
+        }
+        logMessage(`${movingUnit.player} 的 Lv.${movingUnit.tier} 擊敗了對手的 Lv.${defender.tier}！`);
+    }
+
+    // 檢查合併機制 (Mandatory Requirement: 必須包含至少一個 Lv.1)
+    if (toHex.unit && toHex.unit.player === movingUnit.player) {
+        let u1 = movingUnit;
+        let u2 = toHex.unit;
+        if (u1.tier === 1 && u2.tier === 1) {
+            toHex.unit = { player: u1.player, tier: 2, fresh: true };
+            logMessage(`合併成功！兩個 Lv.1 升級為 Lv.2`);
+        } else if ((u1.tier === 2 && u2.tier === 1) || (u1.tier === 1 && u2.tier === 2)) {
+            toHex.unit = { player: u1.player, tier: 3, fresh: true };
+            logMessage(`合併成功！升級為 Lv.3`);
+        } else if ((u1.tier === 3 && u2.tier === 1) || (u1.tier === 1 && u2.tier === 3)) {
+            toHex.unit = { player: u1.player, tier: 4, fresh: true };
+            logMessage(`合併成功！升級為最高階 Lv.4！獲得額外 Lv.1 重生獎勵！`);
+            // Lv.4 獎勵立即重生一個 Lv.1
+            respawnLv1(u1.player);
+        } else {
+            logMessage("無效的合併組合（合併必須包含 Lv.1）");
+            return;
+        }
+        fromHex.unit = null;
+    } else {
+        // 一般移動或吃子
+        toHex.unit = movingUnit;
+        fromHex.unit = null;
+    }
+
+    gameState.selectedHex = null;
+    gameState.validMoves = [];
+    drawBoard();
+
+    // 進入下一階段或換手
+    endTurnOrPhase();
+}
+
+// 結束階段與回合切換
+function endCurrentPhase() {
+    if (gameState.turn === 'black') {
+        gameState.turn = 'white';
+        logMessage("輪到白方 (Player 2) 回合。");
+    } else {
+        gameState.turn = 'black';
+        logMessage("輪到黑方 (Player 1) 回合。");
+    }
+    // 移除所有棋子的 fresh 限制
+    hexGrid.forEach(h => { if (h.unit) h.unit.fresh = false; });
+    updateUI();
+    drawBoard();
+}
+
+function respawnLv1(player) {
+    // 隨機或讓玩家選擇在對應編號區重生
+    let emptyHexes = hexGrid.filter(h => !h.unit && h.type === 'normal');
+    if (emptyHexes.length > 0) {
+        let target = emptyHexes[Math.floor(Math.random() * emptyHexes.length)];
+        target.unit = { player: player, tier: 1, fresh: false };
+        logMessage(`${player} 獲得獎勵重生 Lv.1 單位！`);
+    }
+}
+
+function useToken(type) {
+    let tokens = gameState.turn === 'black' ? gameState.blackTokens : gameState.whiteTokens;
+    if (!tokens[type === 'PLUS' ? 'plus' : 'uTurn']) {
+        logMessage("此 Token 已經使用過了！");
+        return;
+    }
+    tokens[type === 'PLUS' ? 'plus' : 'uTurn'] = false;
+    logMessage(`${gameState.turn} 使用了特殊 Token: ${type}`);
+    updateUI();
+}
+
+function logMessage(msg) {
+    let logBox = document.getElementById('gameLog');
+    logBox.innerHTML += `> ${msg}<br>`;
+    logBox.scrollTop = logBox.scrollHeight;
+}
+
+function updateUI() {
+    document.getElementById('currentTurnText').innerText = `當前回合：${gameState.turn === 'black' ? '黑方 (Player 1)' : '白方 (Player 2)'}`;
+    document.getElementById('tokenPlusBtn').disabled = !(gameState.turn === 'black' ? gameState.blackTokens.plus : gameState.whiteTokens.plus);
+    document.getElementById('tokenUTurnBtn').disabled = !(gameState.turn === 'black' ? gameState.blackTokens.uTurn : gameState.whiteTokens.uTurn);
+}
+
+function triggerWin(winner) {
+    gameState.gameOver = true;
+    let modal = document.getElementById('modal');
+    document.getElementById('modalText').innerText = `🎉 恭喜 ${winner === 'black' ? '黑方 (Player 1)' : '白方 (Player 2)'} 成功攻佔主堡獲得勝利！`;
+    modal.style.display = 'flex';
+}
+
+// 啟動遊戲
+initGame();
+</script>
+
+</body>
+</html>
