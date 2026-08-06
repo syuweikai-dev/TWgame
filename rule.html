@@ -906,7 +906,12 @@ function calculateScore() {
             if (otherHistoric > 0) comboBonus -= otherHistoric * 1;
         }
 
-        if (lm.hasModernAirport) {
+        let hasAirportPassive = lm.hasModernAirport;
+        if (lm.isModernCopyCard) {
+            let sel = document.getElementById("copy_modern_" + idx);
+            if (sel && sel.value === "桃園國際機場") { hasAirportPassive = true; }
+        }
+        if (hasAirportPassive) {
             let otherModern = modernCount - 1;
             if (otherModern > 0) comboBonus += otherModern * 3;
         }
