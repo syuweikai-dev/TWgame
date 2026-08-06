@@ -303,8 +303,8 @@ ul {
 }
 
 .category-icon {
-    width: 38px;
-    height: 38px;
+    width: 28px;
+    height: 28px;
     object-fit: contain;
 }
 </style>
@@ -674,7 +674,6 @@ function initCalculator() {
     const lmContainer = document.getElementById("landmarkContainer");
     const reservedSelect = document.getElementById("reservedLandmarkSelect");
 
-    // 建立分類容器
     const modernTitle = document.createElement("div");
     modernTitle.className = "category-title";
     modernTitle.innerHTML = '<img src="現代地標.png" class="category-icon" alt=""> <b>現代地標</b>';
@@ -711,7 +710,6 @@ function initCalculator() {
     lmContainer.appendChild(historicTitle);
     lmContainer.appendChild(historicGrid);
 
-    // 依照原陣列順序或指定分類建立地標勾選項目
     landmarks.forEach((item, index) => {
         let label = document.createElement("label");
         label.className = "checkbox-item";
@@ -758,7 +756,6 @@ function initCalculator() {
             '<span>' + item.name + ' (' + item.score + '分)</span>' +
             '</div>' + extraHtml;
 
-        // 依據 tag 放入對應的區塊
         if (item.tag === "現代建設") {
             modernGrid.appendChild(label);
         } else if (item.tag === "自然風景") {
@@ -770,7 +767,6 @@ function initCalculator() {
         }
     });
 
-    // 建立保留地標下拉選單（依分數由高到低排序）
     let sortedLandmarksForDropdown = landmarks.map((item, idx) => ({ item, idx }))
         .sort((a, b) => b.item.score - a.item.score);
 
@@ -841,21 +837,19 @@ function calculateScore() {
     handle101Selection();
 
     let effectiveLandmarks = [];
-    let activeLandmarkTags = new Set(); // 記錄目前持有的地標涵蓋了哪些標籤
+    let activeLandmarkTags = new Set();
 
     landmarks.forEach(function(item, idx) {
         let chk = document.getElementById("chk_lm_" + idx);
         if (chk && chk.checked) {
             effectiveLandmarks.push({ item: item, index: idx });
-            activeLandmarkTags.add(item.tag); // 把擁有的地標標籤記錄下來
+            activeLandmarkTags.add(item.tag);
         }
     });
 
-    // 計算身分牌連動分數：必須「持有對應標籤的地標」，這張身分牌才能計分
     const idCheckboxes = document.querySelectorAll("#identityContainer input:checked");
     idCheckboxes.forEach(function(cb) {
         let tag = identities[cb.value].tag;
-        // 條件：不是無標籤，且你的地標庫裡面確實有這個標籤
         if(tag !== "無標籤" && activeLandmarkTags.has(tag)) {
             if (tag === "現代建設") {
                 synergyBonus += 2;
@@ -871,6 +865,16 @@ function calculateScore() {
     let hasGuguan = effectiveLandmarks.some(function(el) { return el.item.name === "金門莒光樓"; });
     let hasFengshiye = effectiveLandmarks.some(function(el) { return el.item.name === "金門風獅爺"; });
     let hasLongtan = effectiveLandmarks.some(function(el) { return el.item.name === "屏東鵝鑾鼻燈塔"; });
+
+    // 檢查是否有燈塔 Combo（包含綠島燈塔本尊，或是現代卡複製綠島燈塔）
+    let hasLighthouseEffect = hasLongtan && effectiveLandmarks.some(function(el) {
+        if (el.item.name === "綠島燈塔") return true;
+        if (el.item.isModernCopyCard) {
+            let sel = document.getElementById("copy_modern_" + el.index);
+            if (sel && sel.value === "綠島燈塔") return true;
+        }
+        return false;
+    });
 
     let nightMarketListWithSource = [];
     const validNightMarketNames = ["廟口夜市", "逢甲夜市", "羅東夜市", "台南花園夜市", "饒河夜市"];
@@ -927,9 +931,11 @@ function calculateScore() {
             let otherModern = modernCount - 1;
             if (otherModern > 0) comboBonus += otherModern * 3;
         }
-
-        if (lm.hasLighthouseCombo && hasLongtan) { comboBonus += 2; }
     });
+
+    if (hasLighthouseEffect) {
+        comboBonus += 2;
+    }
 
     nightMarketListWithSource.forEach(function(market) {
         if (market.hasPassive) {
