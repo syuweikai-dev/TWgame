@@ -445,7 +445,7 @@ ul {
     <h2>🏆 遊戲結算與計分說明</h2>
     <ul>
         <li>🏷️ <b>地標基本分</b>：左上數字。</li>
-        <li>🔗 <b>標籤連動加分</b>：<span class="highlight">現代建設 +2 分</span>，其餘標籤各 +1 分（若持有複數張相同標籤身分牌將會各自累加）。</li>
+        <li>🔗 <b>標籤連動加分</b>：<span class="highlight">現代建設 +2 分</span>，其餘標籤各 +1 分（若持有複數張相同標籤身分牌將會各自累加，<span style="color:red">但前提是必須擁有對應標籤的地標</span>）。</li>
         <li>⚡ <b>地標卡技能加分</b>：地標卡被動技能連動獲得額外分數</li>
     </ul>
 </div>
@@ -838,26 +838,30 @@ function calculateScore() {
     let comboBonus = 0;
     let reservedPenalty = 0;
 
-    // 計算各標籤被持有的身分牌數量（每張身分牌都獨立計算加分）
+    handle101Selection();
+
+    let effectiveLandmarks = [];
+    let activeLandmarkTags = new Set(); // 記錄目前持有的地標涵蓋了哪些標籤
+
+    landmarks.forEach(function(item, idx) {
+        let chk = document.getElementById("chk_lm_" + idx);
+        if (chk && chk.checked) {
+            effectiveLandmarks.push({ item: item, index: idx });
+            activeLandmarkTags.add(item.tag); // 把擁有的地標標籤記錄下來
+        }
+    });
+
+    // 計算身分牌連動分數：必須「持有對應標籤的地標」，這張身分牌才能計分
     const idCheckboxes = document.querySelectorAll("#identityContainer input:checked");
     idCheckboxes.forEach(function(cb) {
         let tag = identities[cb.value].tag;
-        if(tag !== "無標籤") {
+        // 條件：不是無標籤，且你的地標庫裡面確實有這個標籤
+        if(tag !== "無標籤" && activeLandmarkTags.has(tag)) {
             if (tag === "現代建設") {
                 synergyBonus += 2;
             } else {
                 synergyBonus += 1;
             }
-        }
-    });
-
-    handle101Selection();
-
-    let effectiveLandmarks = [];
-    landmarks.forEach(function(item, idx) {
-        let chk = document.getElementById("chk_lm_" + idx);
-        if (chk && chk.checked) {
-            effectiveLandmarks.push({ item: item, index: idx });
         }
     });
 
