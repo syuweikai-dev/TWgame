@@ -902,8 +902,10 @@ function calculateScore() {
         }
 
         if (lm.hasHistoricPenalty) {
-            let otherHistoric = historicCount - 1;
-            if (otherHistoric > 0) comboBonus -= otherHistoric * 1;
+            // 九份老街修正：只要場上有幾張歷史古蹟，就直接扣幾分（1張古蹟扣1分）
+            if (historicCount > 0) {
+                comboBonus -= historicCount * 1;
+            }
         }
 
         let hasAirportPassive = lm.hasModernAirport;
