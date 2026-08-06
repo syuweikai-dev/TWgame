@@ -291,6 +291,22 @@ ul {
     color: #b45309;
     line-height: 1.5;
 }
+
+.category-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 15px;
+    color: #0f766e;
+    margin-top: 12px;
+    margin-bottom: 6px;
+}
+
+.category-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
 </style>
 </head>
 <body>
@@ -429,7 +445,7 @@ ul {
     <h2>🏆 遊戲結算與計分說明</h2>
     <ul>
         <li>🏷️ <b>地標基本分</b>：左上數字。</li>
-        <li>🔗 <b>標籤連動加分</b>：<span class="highlight">現代建設 +2 分</span>，其餘標籤各 +1 分。</li>
+        <li>🔗 <b>標籤連動加分</b>：<span class="highlight">現代建設 +2 分</span>，其餘標籤各 +1 分（若持有複數張相同標籤身分牌將會各自累加）。</li>
         <li>⚡ <b>地標卡技能加分</b>：地標卡被動技能連動獲得額外分數</li>
     </ul>
 </div>
@@ -440,7 +456,7 @@ ul {
 
     <div class="calculator-section">
         <h3>🏛️ 持有的地標卡</h3>
-        <div id="landmarkContainer" class="checkbox-grid"></div>
+        <div id="landmarkContainer"></div>
     </div>
 
     <div class="calculator-section">
@@ -517,7 +533,7 @@ const landmarks = [
 
 const identities = [
     {name: "金雞部", tag: "現代建設"},
-    {name: "勞洞部", tag: "自然風景"},  //noah製作
+    {name: "勞洞部", tag: "自然風景"},  
     {name: "農YA部", tag: "美食小吃"},
     {name: "數喂發展部", tag: "現代建設"},
     {name: "內症部", tag: "自然風景"},
@@ -537,7 +553,7 @@ const landmarkSkills = {
         type: "立即效果",
         typeClass: "tag-immediate",
         desc: "指定一位玩家互換兩張身份牌。",
-        note: "自己與另一位玩家互換身份牌，當有一方身份牌只有一張，僅能互換一張。此牌在某些情況能發揮出強大的作用 (笑)"
+        note: "自己與另一位玩家互換身份牌，當有一方身份牌只有一張，僅能互換一張。此牌 in 某些情況能發揮出強大的作用 (笑)"
     },
     queen: {
         type: "立即效果",
@@ -583,7 +599,6 @@ const landmarkSkills = {
     }
 };
 
-// 基礎核心身分與完整身分庫設定
 const coreIdentitiesPool = [
     [{name: "金雞部", tag: "現代建設"}, {name: "勞洞部", tag: "自然風景"}, {name: "農YA部", tag: "美食小吃"}, {name: "環淨部", tag: "歷史古蹟"}],
     [{name: "蚊化部", tag: "現代建設"}, {name: "內症部", tag: "自然風景"}, {name: "衛生浮力部", tag: "美食小吃"}, {name: "教鬱部", tag: "歷史古蹟"}],
@@ -610,11 +625,9 @@ const allIdentities = [
 function generateGameSetup() {
     let playerCount = document.getElementById("setupPlayerCount").value;
     
-    // 隨機挑選一套核心身分組合
     let shuffledCores = [...coreIdentitiesPool].sort(() => Math.random() - 0.5);
     let selectedSet = [...shuffledCores[0]];
     
-    // 找出尚未被選入核心組合的剩餘身分作為補充池（確保絕對不重複）
     let coreNames = selectedSet.map(item => item.name);
     let remainingPool = allIdentities.filter(item => !coreNames.includes(item.name));
     remainingPool.sort(() => Math.random() - 0.5);
@@ -661,6 +674,44 @@ function initCalculator() {
     const lmContainer = document.getElementById("landmarkContainer");
     const reservedSelect = document.getElementById("reservedLandmarkSelect");
 
+    // 建立分類容器
+    const modernTitle = document.createElement("div");
+    modernTitle.className = "category-title";
+    modernTitle.innerHTML = '<img src="現代地標.png" class="category-icon" alt=""> <b>現代地標</b>';
+    const modernGrid = document.createElement("div");
+    modernGrid.className = "checkbox-grid";
+    modernGrid.style.marginBottom = "15px";
+
+    const natureTitle = document.createElement("div");
+    natureTitle.className = "category-title";
+    natureTitle.innerHTML = '<img src="自然風景.png" class="category-icon" alt=""> <b>自然風景</b>';
+    const natureGrid = document.createElement("div");
+    natureGrid.className = "checkbox-grid";
+    natureGrid.style.marginBottom = "15px";
+
+    const foodTitle = document.createElement("div");
+    foodTitle.className = "category-title";
+    foodTitle.innerHTML = '<img src="美食小吃.png" class="category-icon" alt=""> <b>美食小吃</b>';
+    const foodGrid = document.createElement("div");
+    foodGrid.className = "checkbox-grid";
+    foodGrid.style.marginBottom = "15px";
+
+    const historicTitle = document.createElement("div");
+    historicTitle.className = "category-title";
+    historicTitle.innerHTML = '<img src="歷史古蹟.png" class="category-icon" alt=""> <b>歷史古蹟</b>';
+    const historicGrid = document.createElement("div");
+    historicGrid.className = "checkbox-grid";
+
+    lmContainer.appendChild(modernTitle);
+    lmContainer.appendChild(modernGrid);
+    lmContainer.appendChild(natureTitle);
+    lmContainer.appendChild(natureGrid);
+    lmContainer.appendChild(foodTitle);
+    lmContainer.appendChild(foodGrid);
+    lmContainer.appendChild(historicTitle);
+    lmContainer.appendChild(historicGrid);
+
+    // 依照原陣列順序或指定分類建立地標勾選項目
     landmarks.forEach((item, index) => {
         let label = document.createElement("label");
         label.className = "checkbox-item";
@@ -706,11 +757,27 @@ function initCalculator() {
             '<input type="checkbox" id="chk_lm_' + index + '" value="' + index + '" onchange="handleLandmarkCheckboxChange(' + index + '); calculateScore();">' +
             '<span>' + item.name + ' (' + item.score + '分)</span>' +
             '</div>' + extraHtml;
-        lmContainer.appendChild(label);
 
+        // 依據 tag 放入對應的區塊
+        if (item.tag === "現代建設") {
+            modernGrid.appendChild(label);
+        } else if (item.tag === "自然風景") {
+            natureGrid.appendChild(label);
+        } else if (item.tag === "美食小吃") {
+            foodGrid.appendChild(label);
+        } else if (item.tag === "歷史古蹟") {
+            historicGrid.appendChild(label);
+        }
+    });
+
+    // 建立保留地標下拉選單（依分數由高到低排序）
+    let sortedLandmarksForDropdown = landmarks.map((item, idx) => ({ item, idx }))
+        .sort((a, b) => b.item.score - a.item.score);
+
+    sortedLandmarksForDropdown.forEach(entry => {
         let resOpt = document.createElement("option");
-        resOpt.value = index;
-        resOpt.textContent = item.name + " (" + item.score + "分)";
+        resOpt.value = entry.idx;
+        resOpt.textContent = entry.item.name + " (" + entry.item.score + "分)";
         reservedSelect.appendChild(resOpt);
     });
 
@@ -720,7 +787,7 @@ function initCalculator() {
         label.className = "checkbox-item";
         label.innerHTML = '<div class="checkbox-main">' +
             '<input type="checkbox" value="' + index + '" onchange="calculateScore()">' +
-            '<span>' + item.name + '</span>' +
+            '<span>' + item.name + ' <span style="font-size:11px; color:#666;">(' + item.tag + ')</span></span>' +
             '</div>';
         idContainer.appendChild(label);
     });
@@ -771,12 +838,16 @@ function calculateScore() {
     let comboBonus = 0;
     let reservedPenalty = 0;
 
-    let identityTags = {};
+    // 計算各標籤被持有的身分牌數量（每張身分牌都獨立計算加分）
     const idCheckboxes = document.querySelectorAll("#identityContainer input:checked");
     idCheckboxes.forEach(function(cb) {
         let tag = identities[cb.value].tag;
         if(tag !== "無標籤") {
-            identityTags[tag] = (identityTags[tag] || 0) + 1;
+            if (tag === "現代建設") {
+                synergyBonus += 2;
+            } else {
+                synergyBonus += 1;
+            }
         }
     });
 
@@ -831,11 +902,6 @@ function calculateScore() {
                 if (targetLm.name === "金門風獅爺" && hasGuguan) targetBaseScore = 5;
                 comboBonus += targetBaseScore;
             }
-        }
-
-        if (identityTags[lm.tag] && identityTags[lm.tag] > 0) {
-            if (lm.tag === "現代建設") { synergyBonus += 2; } 
-            else { synergyBonus += 1; }
         }
 
         if (lm.hasWorkerInput) {
