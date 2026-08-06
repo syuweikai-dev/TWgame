@@ -866,29 +866,8 @@ function calculateScore() {
     let hasFengshiye = effectiveLandmarks.some(function(el) { return el.item.name === "金門風獅爺"; });
     let hasLongtan = effectiveLandmarks.some(function(el) { return el.item.name === "屏東鵝鑾鼻燈塔"; });
 
-    // 檢查是否有燈塔 Combo（包含綠島燈塔本尊，或是現代卡複製綠島燈塔）
-    let hasLighthouseEffect = hasLongtan && effectiveLandmarks.some(function(el) {
-        if (el.item.name === "綠島燈塔") return true;
-        if (el.item.isModernCopyCard) {
-            let sel = document.getElementById("copy_modern_" + el.index);
-            if (sel && sel.value === "綠島燈塔") return true;
-        }
-        return false;
-    });
-
     let nightMarketListWithSource = [];
     const validNightMarketNames = ["廟口夜市", "逢甲夜市", "羅東夜市", "台南花園夜市", "饒河夜市"];
-
-    effectiveLandmarks.forEach(function(el) {
-        if (validNightMarketNames.includes(el.item.name)) {
-            let hasRahePassive = (el.item.name === "饒河夜市");
-            if (el.item.isFoodCopyCard) {
-                let sel = document.getElementById("copy_food_" + el.index);
-                if (sel && sel.value === "饒河夜市") { hasRahePassive = true; }
-            }
-            nightMarketListWithSource.push({ name: el.item.name, hasPassive: hasRahePassive, cardIndex: el.index });
-        }
-    });
 
     effectiveLandmarks.forEach(function(el) {
         let lm = el.item;
@@ -931,11 +910,28 @@ function calculateScore() {
             let otherModern = modernCount - 1;
             if (otherModern > 0) comboBonus += otherModern * 3;
         }
-    });
 
-    if (hasLighthouseEffect) {
-        comboBonus += 2;
-    }
+        // 獨立計算每個燈塔（本尊或美術館複製）是否能與屏東燈塔達成 Combo
+        if (hasLongtan) {
+            if (lm.name === "綠島燈塔") {
+                comboBonus += 2;
+            } else if (lm.isModernCopyCard) {
+                let sel = document.getElementById("copy_modern_" + idx);
+                if (sel && sel.value === "綠島燈塔") {
+                    comboBonus += 2;
+                }
+            }
+        }
+
+        if (validNightMarketNames.includes(lm.name)) {
+            let hasRahePassive = (lm.name === "饒河夜市");
+            if (lm.isFoodCopyCard) {
+                let sel = document.getElementById("copy_food_" + idx);
+                if (sel && sel.value === "饒河夜市") { hasRahePassive = true; }
+            }
+            nightMarketListWithSource.push({ name: lm.name, hasPassive: hasRahePassive, cardIndex: idx });
+        }
+    });
 
     nightMarketListWithSource.forEach(function(market) {
         if (market.hasPassive) {
